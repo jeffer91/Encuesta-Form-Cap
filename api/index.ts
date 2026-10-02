@@ -102,7 +102,7 @@ async function createSubmission(request: Request) {
   const form = body.formacion || {};
   const periodCode = text(body.periodCode, 40);
 
-  if (!requireFields(docente, ["cedula","nombres","correoInstitucional","correoPersonal","celular"]) ||
+  if (!requireFields(docente, ["cedula","nombres","apellidos","correoInstitucional","correoPersonal","celular"]) ||
       !requireFields(perfil, ["carreraPrincipal","programa","dedicacion","sede","asignaturaCompleja","causaAsignatura","refuerzoAsignatura"]) ||
       !requireFields(cap, ["capacitacion12m","necesidadPrioritaria","nivelNecesidad"]) ||
       !requireFields(form, ["nivelAcademico","afinidadTitulo","cursaFormacion","interesFormacion"]) || !periodCode) {
@@ -130,12 +130,12 @@ async function createSubmission(request: Request) {
     if (!career.rowCount || career.rows[0].programa !== text(perfil.programa)) throw Object.assign(new Error("La carrera y el programa no coinciden."), { status: 400 });
 
     const teacher = await client.query(
-      `INSERT INTO docentes (cedula,nombres,correo_institucional,correo_personal,celular)
-       VALUES ($1,$2,$3,$4,$5)
-       ON CONFLICT (cedula) DO UPDATE SET nombres=EXCLUDED.nombres, correo_institucional=EXCLUDED.correo_institucional,
+      `INSERT INTO docentes (cedula,nombres,apellidos,correo_institucional,correo_personal,celular)
+       VALUES ($1,$2,$3,$4,$5,$6)
+       ON CONFLICT (cedula) DO UPDATE SET nombres=EXCLUDED.nombres, apellidos=EXCLUDED.apellidos, correo_institucional=EXCLUDED.correo_institucional,
          correo_personal=EXCLUDED.correo_personal, celular=EXCLUDED.celular, actualizado_en=now()
        RETURNING id`,
-      [text(docente.cedula), text(docente.nombres, 180), text(docente.correoInstitucional, 254).toLowerCase(), text(docente.correoPersonal, 254).toLowerCase(), text(docente.celular, 15)]
+      [text(docente.cedula), text(docente.nombres, 120), text(docente.apellidos, 120), text(docente.correoInstitucional, 254).toLowerCase(), text(docente.correoPersonal, 254).toLowerCase(), text(docente.celular, 15)]
     );
     const survey = await client.query(
       `INSERT INTO encuestas (docente_id,periodo_id,carrera_principal_codigo,programa,dedicacion,sede,asignatura_compleja,causa_asignatura,refuerzo_asignatura)
@@ -183,7 +183,7 @@ async function adminResponses(request: Request) {
   const url = new URL(request.url);
   const period = text(url.searchParams.get("period") || "2026-2027", 40);
   const result = await pool.query(
-    `SELECT e.id, d.cedula, d.nombres, d.correo_institucional, d.correo_personal, d.celular,
+    `SELECT e.id, d.cedula, d.nombres, d.apellidos, d.correo_institucional, d.correo_personal, d.celular,
             e.carrera_principal_codigo AS carrera_codigo, c.nombre AS carrera_nombre, e.programa, e.dedicacion, e.sede,
             e.asignatura_compleja, e.causa_asignatura, e.refuerzo_asignatura,
             cr.capacitacion_12m, cr.necesidad_prioritaria, cr.nivel_necesidad,

@@ -261,6 +261,7 @@ function serializeForm() {
     docente: {
       cedula: String(fd.get("cedula") || "").trim(),
       nombres: String(fd.get("nombres") || "").trim(),
+      apellidos: String(fd.get("apellidos") || "").trim(),
       correoInstitucional: String(fd.get("correoInstitucional") || "").trim().toLowerCase(),
       correoPersonal: String(fd.get("correoPersonal") || "").trim().toLowerCase(),
       celular: String(fd.get("celular") || "").trim()
@@ -313,7 +314,7 @@ function serializeForm() {
 function renderReview() {
   const d = serializeForm();
   const items = [
-    ["Identificación", [["Docente", d.docente.nombres], ["Cédula", d.docente.cedula], ["Carrera principal", d.perfil.carreraPrincipalNombre], ["Programa", d.perfil.programa], ["Dedicación", d.perfil.dedicacion], ["Sede/modalidad", d.perfil.sede]]],
+    ["Identificación", [["Docente", `${d.docente.nombres} ${d.docente.apellidos}`.trim()], ["Cédula", d.docente.cedula], ["Carrera principal", d.perfil.carreraPrincipalNombre], ["Programa", d.perfil.programa], ["Dedicación", d.perfil.dedicacion], ["Sede/modalidad", d.perfil.sede]]],
     ["Capacitación", [["Capacitación últimos 12 meses", d.capacitacion.capacitacion12m], ["Prioridad", d.capacitacion.necesidadPrioritaria], ["Nivel de necesidad", d.capacitacion.nivelNecesidad], ["Necesidades seleccionadas", d.capacitacion.necesidades.join(", ")]]],
     ["Formación", [["Nivel actual", d.formacion.nivelAcademico], ["Actualmente cursa formación", d.formacion.cursaFormacion], ["Interés en nueva formación", d.formacion.interesFormacion], ["Nivel deseado", d.formacion.nivelDeseado || "No aplica"], ["Área de interés", d.formacion.areaFormacion || "No aplica"], ["Apoyo principal", d.formacion.apoyoFormacion || "No aplica"]]]
   ];

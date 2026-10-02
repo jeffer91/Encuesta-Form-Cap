@@ -59,7 +59,7 @@ function filteredAdminRows() {
   const career = document.querySelector("#filter-career").value;
   const program = document.querySelector("#filter-program").value;
   const query = document.querySelector("#admin-search").value.trim().toLowerCase();
-  return adminRows.filter(row => (!career || row.carrera_codigo === career) && (!program || row.programa === program) && (!query || `${row.nombres} ${row.cedula}`.toLowerCase().includes(query)));
+  return adminRows.filter(row => (!career || row.carrera_codigo === career) && (!program || row.programa === program) && (!query || `${row.nombres} ${row.apellidos || ""} ${row.cedula}`.toLowerCase().includes(query)));
 }
 
 function pct(n, total) { return total ? `${Math.round((n / total) * 100)}%` : "0%"; }
@@ -79,13 +79,13 @@ function renderAdmin() {
   document.querySelector("#metric-training").textContent = pct(rows.filter(r => r.capacitacion_12m === "Sí").length, rows.length);
   renderBars(document.querySelector("#training-chart"), countBy(rows, "necesidad_prioritaria"), 6);
   renderBars(document.querySelector("#education-chart"), countBy(rows, "nivel_academico"), 7);
-  document.querySelector("#responses-body").innerHTML = rows.length ? rows.map(r => `<tr><td><strong>${esc(r.nombres)}</strong><br><small>${esc(r.cedula)}</small></td><td>${esc(r.carrera_nombre)}</td><td><span class="tag">${esc(r.programa)}</span></td><td>${esc(r.necesidad_prioritaria || "—")}</td><td>${esc(r.nivel_academico || "—")}</td><td>${esc(r.interes_formacion || "—")}</td><td>${esc(new Date(r.submitted_at).toLocaleDateString("es-EC"))}</td></tr>`).join("") : `<tr><td colspan="7"><div class="empty-state">Sin respuestas para los filtros seleccionados.</div></td></tr>`;
+  document.querySelector("#responses-body").innerHTML = rows.length ? rows.map(r => `<tr><td><strong>${esc(`${r.nombres || ""} ${r.apellidos || ""}`.trim())}</strong><br><small>${esc(r.cedula)}</small></td><td>${esc(r.carrera_nombre)}</td><td><span class="tag">${esc(r.programa)}</span></td><td>${esc(r.necesidad_prioritaria || "—")}</td><td>${esc(r.nivel_academico || "—")}</td><td>${esc(r.interes_formacion || "—")}</td><td>${esc(new Date(r.submitted_at).toLocaleDateString("es-EC"))}</td></tr>`).join("") : `<tr><td colspan="7"><div class="empty-state">Sin respuestas para los filtros seleccionados.</div></td></tr>`;
 }
 
 function exportCsv() {
   const rows = filteredAdminRows();
   if (!rows.length) return showToast("No hay datos para exportar.");
-  const cols = ["cedula","nombres","correo_institucional","correo_personal","celular","carrera_nombre","programa","dedicacion","sede","asignatura_compleja","necesidad_prioritaria","nivel_necesidad","nivel_academico","interes_formacion","nivel_deseado","area_formacion","submitted_at"];
+  const cols = ["cedula","nombres","apellidos","correo_institucional","correo_personal","celular","carrera_nombre","programa","dedicacion","sede","asignatura_compleja","necesidad_prioritaria","nivel_necesidad","nivel_academico","interes_formacion","nivel_deseado","area_formacion","submitted_at"];
   const csv = "\ufeff" + [cols.join(";"), ...rows.map(row => cols.map(c => `"${String(row[c] ?? "").replace(/"/g, '""')}"`).join(";"))].join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const a = document.createElement("a");

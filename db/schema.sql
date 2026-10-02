@@ -27,12 +27,15 @@ CREATE TABLE IF NOT EXISTS docentes (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   cedula char(10) NOT NULL UNIQUE,
   nombres text NOT NULL,
+  apellidos text NOT NULL,
   correo_institucional text NOT NULL,
   correo_personal text NOT NULL,
   celular varchar(15) NOT NULL,
   creado_en timestamptz NOT NULL DEFAULT now(),
   actualizado_en timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE docentes ADD COLUMN IF NOT EXISTS apellidos text NOT NULL DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS encuestas (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
