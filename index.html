@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b1f3a" />
+  <meta name="description" content="Formulario institucional ITSQMET para la detección de necesidades de capacitación y formación docente." />
+  <title>Detección Docente | ITSQMET</title>
+  <link rel="icon" type="image/png" href="assets/logo-itsqmet.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#formulario" aria-label="ITSQMET - inicio">
+        <img src="assets/logo-itsqmet.png" alt="ITSQMET" />
+        <span class="brand-copy">
+          <strong>ITSQMET</strong>
+          <small>Gestión de Procesos Académicos</small>
+        </span>
+      </a>
+      <nav class="top-actions" aria-label="Navegación principal">
+        <button class="nav-link active" data-view="formulario" type="button">Formulario docente</button>
+        <button class="nav-link" data-view="admin" type="button">Administración</button>
+      </nav>
+    </header>
+
+    <main>
+      <section id="view-formulario" class="view active" aria-labelledby="form-title">
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow">Período 2026–2027</span>
+            <h1 id="form-title">Detección de necesidades docentes</h1>
+            <p>Complete su información académica y profesional. Sus respuestas permitirán planificar acciones de capacitación y formación pertinentes.</p>
+          </div>
+          <div class="heading-badge" aria-label="Tiempo estimado">
+            <span>Tiempo estimado</span>
+            <strong>6–8 min</strong>
+          </div>
+        </div>
+
+        <div class="form-layout">
+          <aside class="stepper-card" aria-label="Progreso del formulario">
+            <div class="progress-summary">
+              <span>Progreso</span>
+              <strong id="progress-percent">20%</strong>
+            </div>
+            <div class="progress-track"><span id="progress-bar" style="width:20%"></span></div>
+            <ol class="stepper" id="stepper">
+              <li class="active" data-step-indicator="1"><span>1</span><div><strong>Identificación</strong><small>Datos y carrera</small></div></li>
+              <li data-step-indicator="2"><span>2</span><div><strong>Perfil docente</strong><small>Práctica académica</small></div></li>
+              <li data-step-indicator="3"><span>3</span><div><strong>Capacitación</strong><small>Brechas y prioridades</small></div></li>
+              <li data-step-indicator="4"><span>4</span><div><strong>Formación</strong><small>Trayectoria académica</small></div></li>
+              <li data-step-indicator="5"><span>5</span><div><strong>Confirmación</strong><small>Revisión y envío</small></div></li>
+            </ol>
+            <div class="privacy-note">
+              <span class="privacy-icon">✓</span>
+              <p>Información de uso institucional para planificación académica.</p>
+            </div>
+          </aside>
+
+          <form id="teacher-form" class="form-card" novalidate>
+            <input type="text" name="website" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+            <section class="form-step active" data-step="1">
+              <div class="section-head">
+                <span class="section-number">01</span>
+                <div><h2>Identificación del docente</h2><p>Datos de contacto y carrera principal.</p></div>
+              </div>
+              <div class="field-grid two">
+                <label class="field"><span>Cédula <b>*</b></span><input name="cedula" inputmode="numeric" maxlength="10" placeholder="10 dígitos" required /></label>
+                <label class="field"><span>Nombres y apellidos <b>*</b></span><input name="nombres" autocomplete="name" placeholder="Nombre completo" required /></label>
+                <label class="field"><span>Correo institucional <b>*</b></span><input name="correoInstitucional" type="email" placeholder="nombre@itsqmet.edu.ec" required /></label>
+                <label class="field"><span>Correo personal <b>*</b></span><input name="correoPersonal" type="email" autocomplete="email" placeholder="correo@ejemplo.com" required /></label>
+                <label class="field"><span>Celular <b>*</b></span><input name="celular" inputmode="tel" maxlength="10" placeholder="09XXXXXXXX" required /></label>
+                <label class="field"><span>Carrera principal <b>*</b></span><select name="carreraPrincipal" id="career-select" required><option value="">Seleccione...</option></select><small id="program-label" class="field-hint"></small></label>
+              </div>
+
+              <fieldset class="field-block">
+                <legend>¿Imparte clases en otras carreras? <b>*</b></legend>
+                <div class="segmented" data-radio="otrasCarrerasSiNo">
+                  <label><input type="radio" name="otrasCarrerasSiNo" value="No" required /><span>No</span></label>
+                  <label><input type="radio" name="otrasCarrerasSiNo" value="Sí" required /><span>Sí</span></label>
+                </div>
+              </fieldset>
+              <div id="other-careers-wrap" class="conditional hidden">
+                <label class="field"><span>Seleccione las otras carreras</span><div id="other-careers" class="check-grid compact"></div></label>
+              </div>
+            </section>
+
+            <section class="form-step" data-step="2">
+              <div class="section-head">
+                <span class="section-number">02</span>
+                <div><h2>Perfil y práctica docente</h2><p>Contexto de su actividad académica principal.</p></div>
+              </div>
+              <div class="field-grid two">
+                <label class="field"><span>Tipo de dedicación <b>*</b></span><select name="dedicacion" required><option value="">Seleccione...</option><option>Tiempo Completo (TC)</option><option>Medio Tiempo (MT)</option><option>Tiempo Parcial (TP)</option></select></label>
+                <label class="field"><span>Sede o modalidad principal <b>*</b></span><select name="sede" required><option value="">Seleccione...</option><option>Matriz</option><option>Norte</option><option>Sur</option><option>Manta</option><option>Online</option><option>Híbrida</option></select></label>
+                <label class="field full"><span>Asignatura de su carrera principal que considera más compleja de impartir <b>*</b></span><input name="asignaturaCompleja" list="subject-list" placeholder="Escriba o seleccione la asignatura" required /><datalist id="subject-list"></datalist><small class="field-hint">El catálogo se ajustará progresivamente por carrera.</small></label>
+              </div>
+              <fieldset class="field-block">
+                <legend>Principal causa de dificultad <b>*</b></legend>
+                <div class="radio-cards two-col">
+                  <label><input type="radio" name="causaAsignatura" value="Contenidos técnicos complejos" required /><span>Contenidos técnicos complejos</span></label>
+                  <label><input type="radio" name="causaAsignatura" value="Actualización profesional" /><span>Necesidad de actualización profesional</span></label>
+                  <label><input type="radio" name="causaAsignatura" value="Teoría y práctica" /><span>Dificultad para relacionar teoría y práctica</span></label>
+                  <label><input type="radio" name="causaAsignatura" value="Metodología" /><span>Dificultad metodológica</span></label>
+                  <label><input type="radio" name="causaAsignatura" value="Evaluación" /><span>Dificultad para evaluar</span></label>
+                  <label><input type="radio" name="causaAsignatura" value="Software o equipamiento" /><span>Falta de software, equipos o laboratorios</span></label>
+                  <label><input type="radio" name="causaAsignatura" value="Conocimientos previos estudiantes" /><span>Conocimientos previos de estudiantes</span></label>
+                  <label><input type="radio" name="causaAsignatura" value="Otra" /><span>Otra</span></label>
+                </div>
+              </fieldset>
+              <fieldset class="field-block">
+                <legend>¿Necesita fortalecer sus conocimientos para impartir mejor esta asignatura? <b>*</b></legend>
+                <div class="segmented three" data-radio="refuerzoAsignatura">
+                  <label><input type="radio" name="refuerzoAsignatura" value="Sí" required /><span>Sí</span></label>
+                  <label><input type="radio" name="refuerzoAsignatura" value="Parcialmente" required /><span>Parcialmente</span></label>
+                  <label><input type="radio" name="refuerzoAsignatura" value="No" required /><span>No</span></label>
+                </div>
+              </fieldset>
+            </section>
+
+            <section class="form-step" data-step="3">
+              <div class="section-head">
+                <span class="section-number">03</span>
+                <div><h2>Necesidades de capacitación</h2><p>Actualización de corta duración y fortalecimiento de competencias.</p></div>
+              </div>
+
+              <fieldset class="field-block">
+                <legend>¿Ha recibido capacitación relacionada con docencia durante los últimos 12 meses? <b>*</b></legend>
+                <div class="segmented" data-radio="capacitacion12m">
+                  <label><input type="radio" name="capacitacion12m" value="Sí" required /><span>Sí</span></label>
+                  <label><input type="radio" name="capacitacion12m" value="No" required /><span>No</span></label>
+                </div>
+              </fieldset>
+
+              <div id="training-history" class="conditional hidden">
+                <fieldset class="field-block"><legend>Áreas en las que se ha capacitado</legend><div class="check-grid" data-checkbox-group="areasCapacitadas"></div></fieldset>
+                <label class="field"><span>¿Con qué frecuencia aplica en sus clases lo aprendido?</span><select name="aplicaCapacitacion"><option value="">Seleccione...</option><option>Siempre</option><option>Frecuentemente</option><option>A veces</option><option>Rara vez</option><option>Nunca</option></select></label>
+              </div>
+
+              <fieldset class="field-block">
+                <legend>¿Qué metodologías utiliza actualmente? <b>*</b></legend>
+                <div class="check-grid" data-checkbox-group="metodologias"></div>
+              </fieldset>
+              <fieldset class="field-block">
+                <legend>¿Qué herramientas tecnológicas utiliza regularmente? <b>*</b></legend>
+                <div class="check-grid" data-checkbox-group="herramientas"></div>
+              </fieldset>
+              <fieldset class="field-block">
+                <legend>¿Qué dificultades identifica con mayor frecuencia en sus estudiantes? <b>*</b></legend>
+                <div class="check-grid" data-checkbox-group="dificultadesEstudiantes"></div>
+              </fieldset>
+              <fieldset class="field-block priority-block">
+                <legend>Seleccione hasta 3 áreas en las que necesita fortalecer sus competencias <b>*</b></legend>
+                <p class="legend-help">Estas respuestas determinarán las prioridades institucionales y por carrera.</p>
+                <div class="check-grid" data-checkbox-group="necesidades" data-max="3"></div>
+                <div class="selection-counter"><span id="needs-count">0</span>/3 seleccionadas</div>
+              </fieldset>
+              <div class="field-grid two">
+                <label class="field"><span>Necesidad prioritaria <b>*</b></span><select name="necesidadPrioritaria" id="priority-select" required><option value="">Primero seleccione sus necesidades</option></select></label>
+                <label class="field"><span>Nivel de necesidad <b>*</b></span><select name="nivelNecesidad" required><option value="">Seleccione...</option><option>Muy alta</option><option>Alta</option><option>Media</option><option>Baja</option><option>Muy baja</option></select></label>
+              </div>
+              <fieldset class="field-block"><legend>Recursos que considera necesarios</legend><div class="check-grid" data-checkbox-group="recursos"></div></fieldset>
+              <fieldset class="field-block"><legend>Limitaciones que identifica actualmente</legend><div class="check-grid" data-checkbox-group="limitaciones"></div></fieldset>
+            </section>
+
+            <section class="form-step" data-step="4">
+              <div class="section-head">
+                <span class="section-number">04</span>
+                <div><h2>Formación académica</h2><p>Estudios formales de tercer y cuarto nivel.</p></div>
+              </div>
+              <div class="field-grid two">
+                <label class="field"><span>Nivel académico más alto alcanzado <b>*</b></span><select name="nivelAcademico" required><option value="">Seleccione...</option><option>Técnico Superior</option><option>Tecnología Superior</option><option>Tecnología Universitaria</option><option>Licenciatura / Ingeniería</option><option>Especialización</option><option>Maestría / Maestría Tecnológica</option><option>Doctorado / PhD</option></select></label>
+                <label class="field"><span>Relación del título con su carrera principal <b>*</b></span><select name="afinidadTitulo" required><option value="">Seleccione...</option><option>Directamente relacionado</option><option>Parcialmente relacionado</option><option>No relacionado</option></select></label>
+              </div>
+              <fieldset class="field-block">
+                <legend>¿Actualmente cursa un programa de formación académica formal? <b>*</b></legend>
+                <div class="segmented" data-radio="cursaFormacion"><label><input type="radio" name="cursaFormacion" value="Sí" required /><span>Sí</span></label><label><input type="radio" name="cursaFormacion" value="No" required /><span>No</span></label></div>
+              </fieldset>
+              <div id="current-study" class="conditional hidden">
+                <div class="field-grid two">
+                  <label class="field"><span>Nivel que está cursando</span><select name="nivelCursa"><option value="">Seleccione...</option><option>Tecnología Universitaria</option><option>Licenciatura / Ingeniería</option><option>Especialización</option><option>Maestría / Maestría Tecnológica</option><option>Doctorado / PhD</option></select></label>
+                  <label class="field"><span>Etapa actual</span><select name="etapaFormacion"><option value="">Seleccione...</option><option>Recién iniciado</option><option>Primer tercio</option><option>Etapa intermedia</option><option>Etapa final</option><option>Titulación / tesis</option></select></label>
+                  <label class="field"><span>Nombre del programa</span><input name="programaActual" placeholder="Nombre oficial del programa" /></label>
+                  <label class="field"><span>Institución</span><input name="institucionActual" placeholder="Universidad o institución" /></label>
+                </div>
+              </div>
+
+              <fieldset class="field-block">
+                <legend>¿Está interesado/a en iniciar o continuar estudios de formación académica? <b>*</b></legend>
+                <div class="radio-cards two-col">
+                  <label><input type="radio" name="interesFormacion" value="Corto plazo" required /><span>Sí, en el corto plazo</span></label>
+                  <label><input type="radio" name="interesFormacion" value="Mediano plazo" /><span>Sí, en el mediano plazo</span></label>
+                  <label><input type="radio" name="interesFormacion" value="Sin fecha" /><span>Sí, sin fecha definida</span></label>
+                  <label><input type="radio" name="interesFormacion" value="No por el momento" /><span>No por el momento</span></label>
+                </div>
+              </fieldset>
+              <div id="future-study" class="conditional hidden">
+                <div class="field-grid two">
+                  <label class="field"><span>Nivel académico que desea alcanzar <b>*</b></span><select name="nivelDeseado"><option value="">Seleccione...</option><option>Tecnología Universitaria</option><option>Licenciatura / Ingeniería</option><option>Especialización</option><option>Maestría / Maestría Tecnológica</option><option>Doctorado / PhD</option></select></label>
+                  <label class="field"><span>Tipo de formación prioritaria <b>*</b></span><select name="tipoFormacion"><option value="">Seleccione...</option><option>Específica de mi área profesional</option><option>Educación, pedagogía o docencia</option><option>Investigación</option><option>Gestión académica / administrativa</option><option>Tecnología e innovación</option><option>Otra área transversal</option></select></label>
+                  <label class="field"><span>Área de interés <b>*</b></span><select name="areaFormacion" id="formation-area"><option value="">Seleccione...</option></select></label>
+                  <label class="field"><span>Relación deseada con su carrera <b>*</b></span><select name="relacionFormacion"><option value="">Seleccione...</option><option>Directamente relacionada</option><option>Preferentemente relacionada</option><option>Puede ser transversal</option></select></label>
+                  <label class="field"><span>¿Cuándo estaría dispuesto/a a iniciar? <b>*</b></span><select name="inicioPrevisto"><option value="">Seleccione...</option><option>Inmediatamente</option><option>Dentro de 6 meses</option><option>Entre 6 y 12 meses</option><option>Entre 1 y 2 años</option><option>En más de 2 años</option><option>No definido</option></select></label>
+                  <label class="field"><span>Modalidad preferida <b>*</b></span><select name="modalidadFormacion"><option value="">Seleccione...</option><option>Presencial</option><option>En línea</option><option>Híbrida</option><option>Indiferente</option></select></label>
+                  <label class="field"><span>Principal dificultad para estudiar <b>*</b></span><select name="barreraFormacion"><option value="">Seleccione...</option><option>Costo</option><option>Falta de tiempo</option><option>Horario laboral</option><option>Responsabilidades familiares</option><option>Requisitos de admisión</option><option>Falta de programas adecuados</option><option>Ubicación / distancia</option><option>No identifico dificultades</option><option>Otra</option></select></label>
+                  <label class="field"><span>Apoyo institucional más importante <b>*</b></span><select name="apoyoFormacion"><option value="">Seleccione...</option><option>Patrocinio / apoyo económico</option><option>Horas institucionales para formación</option><option>Flexibilidad de horarios</option><option>Asesoría para seleccionar programa</option><option>Apoyo en procesos de admisión</option><option>Convenios con universidades</option><option>Seguimiento académico</option><option>No requiero apoyo</option><option>Otro</option></select></label>
+                </div>
+              </div>
+            </section>
+
+            <section class="form-step" data-step="5">
+              <div class="section-head">
+                <span class="section-number">05</span>
+                <div><h2>Revise antes de enviar</h2><p>Confirme que los datos registrados sean correctos.</p></div>
+              </div>
+              <div id="review-panel" class="review-panel"></div>
+              <label class="consent-row"><input type="checkbox" name="declaracion" required /><span>Declaro que la información proporcionada es verdadera y autorizo su uso para fines de planificación académica institucional.</span></label>
+              <div id="submit-status" class="status-box hidden" role="status"></div>
+            </section>
+
+            <div class="form-actions">
+              <button id="back-btn" class="btn secondary hidden" type="button">Anterior</button>
+              <span class="spacer"></span>
+              <button id="next-btn" class="btn primary" type="button">Continuar</button>
+              <button id="submit-btn" class="btn primary hidden" type="submit">Enviar formulario</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section id="view-admin" class="view" aria-labelledby="admin-title">
+        <div class="admin-heading">
+          <div><span class="eyebrow">Panel institucional</span><h1 id="admin-title">Resultados docentes</h1><p>Seguimiento consolidado de capacitación y formación.</p></div>
+          <div class="admin-actions"><button id="refresh-admin" class="btn secondary" type="button">Actualizar</button><button id="export-csv" class="btn secondary" type="button">Exportar CSV</button><button id="print-report" class="btn primary" type="button">Imprimir / PDF</button></div>
+        </div>
+
+        <div id="admin-auth" class="admin-auth card">
+          <div><h2>Acceso administrativo</h2><p>Ingrese la clave institucional para consultar respuestas y estadísticas.</p></div>
+          <form id="admin-login" class="inline-form"><input id="admin-key" type="password" placeholder="Clave de administración" autocomplete="current-password" required /><button class="btn primary" type="submit">Ingresar</button></form>
+          <div id="admin-login-status" class="field-hint"></div>
+        </div>
+
+        <div id="admin-dashboard" class="hidden">
+          <div class="filters card">
+            <label><span>Período</span><select id="filter-period"><option value="2026-2027">2026–2027</option></select></label>
+            <label><span>Carrera</span><select id="filter-career"><option value="">Todas las carreras</option></select></label>
+            <label><span>Programa</span><select id="filter-program"><option value="">Todos</option><option>Técnico Superior</option><option>Tecnología Superior</option><option>Tecnología Universitaria</option></select></label>
+          </div>
+          <div class="metric-grid">
+            <article class="metric card"><span>Respuestas</span><strong id="metric-responses">0</strong><small>docentes registrados</small></article>
+            <article class="metric card"><span>Con cuarto nivel</span><strong id="metric-fourth">0%</strong><small>maestría o doctorado</small></article>
+            <article class="metric card"><span>Interés en formación</span><strong id="metric-interest">0%</strong><small>corto o mediano plazo</small></article>
+            <article class="metric card"><span>Capacitación reciente</span><strong id="metric-training">0%</strong><small>últimos 12 meses</small></article>
+          </div>
+          <div class="analytics-grid">
+            <article class="card analytics-card"><div class="card-title"><h2>Necesidades de capacitación</h2><span>Top 6</span></div><div id="training-chart" class="bar-chart"></div></article>
+            <article class="card analytics-card"><div class="card-title"><h2>Nivel académico actual</h2><span>Distribución</span></div><div id="education-chart" class="bar-chart"></div></article>
+          </div>
+          <article class="card table-card">
+            <div class="card-title"><div><h2>Respuestas registradas</h2><p>Detalle por docente y carrera principal.</p></div><input id="admin-search" type="search" placeholder="Buscar docente o cédula" /></div>
+            <div class="table-wrap"><table><thead><tr><th>Docente</th><th>Carrera principal</th><th>Programa</th><th>Capacitación prioritaria</th><th>Nivel actual</th><th>Interés formación</th><th>Fecha</th></tr></thead><tbody id="responses-body"></tbody></table></div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
