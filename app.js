@@ -59,15 +59,6 @@ const OPTIONS = {
     "Manejo y motivación del grupo", "Comunicación y habilidades socioemocionales", "Innovación educativa",
     "Actualización técnica de la profesión", "Integración entre teoría y práctica", "Ética y buenas prácticas docentes"
   ],
-  recursos: [
-    "Software especializado", "Licencias o plataformas", "Equipos tecnológicos", "Equipamiento de laboratorio / taller",
-    "Material didáctico", "Bibliografía actualizada", "Mejor conectividad", "Recursos audiovisuales", "Ninguno"
-  ],
-  limitaciones: [
-    "Equipos obsoletos o insuficientes", "Falta de materiales", "Falta de laboratorios / talleres",
-    "Problemas de conectividad", "Falta de software especializado", "Falta de licencias",
-    "Falta de bibliografía actualizada", "No identifico limitaciones"
-  ]
 };
 
 const FORMATION_AREAS = [
@@ -273,6 +264,7 @@ function serializeForm() {
       otrasCarreras: getRadio("otrasCarrerasSiNo") === "Sí" ? getMulti("otrasCarreras") : [],
       dedicacion: fd.get("dedicacion") || "",
       sede: fd.get("sede") || "",
+      modalidad: fd.get("modalidad") || "",
       asignaturaCompleja: fd.get("asignaturaCompleja") || "",
       causaAsignatura: getRadio("causaAsignatura"),
       refuerzoAsignatura: getRadio("refuerzoAsignatura")
@@ -286,9 +278,7 @@ function serializeForm() {
       dificultadesEstudiantes: getMulti("dificultadesEstudiantes"),
       necesidades: getMulti("necesidades"),
       necesidadPrioritaria: fd.get("necesidadPrioritaria") || "",
-      nivelNecesidad: fd.get("nivelNecesidad") || "",
-      recursos: getMulti("recursos"),
-      limitaciones: getMulti("limitaciones")
+      nivelNecesidad: fd.get("nivelNecesidad") || ""
     },
     formacion: {
       nivelAcademico: fd.get("nivelAcademico") || "",
@@ -314,9 +304,9 @@ function serializeForm() {
 function renderReview() {
   const d = serializeForm();
   const items = [
-    ["Identificación", [["Docente", `${d.docente.nombres} ${d.docente.apellidos}`.trim()], ["Cédula", d.docente.cedula], ["Carrera principal", d.perfil.carreraPrincipalNombre], ["Programa", d.perfil.programa], ["Dedicación", d.perfil.dedicacion], ["Sede/modalidad", d.perfil.sede]]],
+    ["Identificación", [["Docente", `${d.docente.nombres} ${d.docente.apellidos}`.trim()], ["Cédula", d.docente.cedula], ["Carrera principal", d.perfil.carreraPrincipalNombre], ["Programa", d.perfil.programa], ["Dedicación", d.perfil.dedicacion], ["Sede", d.perfil.sede], ["Modalidad", d.perfil.modalidad]]],
     ["Capacitación", [["Capacitación últimos 12 meses", d.capacitacion.capacitacion12m], ["Prioridad", d.capacitacion.necesidadPrioritaria], ["Nivel de necesidad", d.capacitacion.nivelNecesidad], ["Necesidades seleccionadas", d.capacitacion.necesidades.join(", ")]]],
-    ["Formación", [["Nivel actual", d.formacion.nivelAcademico], ["Actualmente cursa formación", d.formacion.cursaFormacion], ["Interés en nueva formación", d.formacion.interesFormacion], ["Nivel deseado", d.formacion.nivelDeseado || "No aplica"], ["Área de interés", d.formacion.areaFormacion || "No aplica"], ["Apoyo principal", d.formacion.apoyoFormacion || "No aplica"]]]
+    ["Formación", [["Nivel actual", d.formacion.nivelAcademico], ["Actualmente cursa un título académico", d.formacion.cursaFormacion], ["Interés en obtener otro título", d.formacion.interesFormacion], ["Nivel deseado", d.formacion.nivelDeseado || "No aplica"], ["Área de interés", d.formacion.areaFormacion || "No aplica"], ["Condición institucional", d.formacion.apoyoFormacion || "No aplica"]]]
   ];
   document.querySelector("#review-panel").innerHTML = items.map(([title, rows]) => `<section class="review-section"><h3>${esc(title)}</h3><div class="review-grid">${rows.map(([label, value]) => `<div class="review-item"><span>${esc(label)}</span><strong>${esc(value || "—")}</strong></div>`).join("")}</div></section>`).join("");
 }
