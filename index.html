@@ -7,7 +7,7 @@
   <meta name="description" content="Formulario institucional ITSQMET para la detección de necesidades de capacitación y formación docente." />
   <title>Detección Docente | ITSQMET</title>
   <link rel="icon" type="image/png" href="assets/logo-itsqmet.png" />
-  <link rel="stylesheet" href="styles.css?v=20261002-2148" />
+  <link rel="stylesheet" href="styles.css?v=20261002-2215" />
 </head>
 <body>
   <div class="app-shell">
@@ -82,7 +82,7 @@
               </div>
               <div class="field-grid two">
                 <label class="field"><span>Tipo de dedicación <b>*</b></span><select name="dedicacion" required><option value="">Seleccione...</option><option>Tiempo Completo (TC)</option><option>Medio Tiempo (MT)</option><option>Tiempo Parcial (TP)</option></select></label>
-                <label class="field"><span>Sede o modalidad principal <b>*</b></span><select name="sede" required><option value="">Seleccione...</option><option>Matriz</option><option>Norte</option><option>Sur</option><option>Manta</option><option>Online</option><option>Híbrida</option></select></label>
+                <div class="field-split"><label class="field"><span>Sede principal <b>*</b></span><select name="sede" required><option value="">Seleccione...</option><option>Matriz</option><option>Norte</option><option>Sur</option><option>Manta</option></select></label><label class="field"><span>Modalidad principal <b>*</b></span><select name="modalidad" required><option value="">Seleccione...</option><option>Presencial</option><option>En línea</option><option>Híbrida</option></select></label></div>
                 <label class="field full"><span>Asignatura de su carrera principal que considera más compleja de impartir <b>*</b></span><input name="asignaturaCompleja" list="subject-list" placeholder="Escriba o seleccione la asignatura" required /><datalist id="subject-list"></datalist><small class="field-hint">El catálogo se ajustará progresivamente por carrera.</small></label>
               </div>
               <fieldset class="field-block">
@@ -149,8 +149,6 @@
                 <label class="field"><span>Necesidad prioritaria <b>*</b></span><select name="necesidadPrioritaria" id="priority-select" required><option value="">Primero seleccione sus necesidades</option></select></label>
                 <label class="field"><span>Nivel de necesidad <b>*</b></span><select name="nivelNecesidad" required><option value="">Seleccione...</option><option>Muy alta</option><option>Alta</option><option>Media</option><option>Baja</option><option>Muy baja</option></select></label>
               </div>
-              <fieldset class="field-block"><legend>Recursos que considera necesarios</legend><div class="check-grid" data-checkbox-group="recursos"></div></fieldset>
-              <fieldset class="field-block"><legend>Limitaciones que identifica actualmente</legend><div class="check-grid" data-checkbox-group="limitaciones"></div></fieldset>
             </section>
 
             <section class="form-step" data-step="4">
@@ -163,7 +161,8 @@
                 <label class="field"><span>Relación del título con su carrera principal <b>*</b></span><select name="afinidadTitulo" required><option value="">Seleccione...</option><option>Directamente relacionado</option><option>Parcialmente relacionado</option><option>No relacionado</option></select></label>
               </div>
               <fieldset class="field-block">
-                <legend>¿Actualmente cursa un programa de formación académica formal? <b>*</b></legend>
+                <legend>¿Actualmente cursa estudios de formación académica formal para obtener un título académico? <b>*</b></legend>
+                <p class="legend-help">Considere únicamente estudios que conduzcan a la obtención de un título académico formal.</p>
                 <div class="segmented" data-radio="cursaFormacion"><label><input type="radio" name="cursaFormacion" value="Sí" required /><span>Sí</span></label><label><input type="radio" name="cursaFormacion" value="No" required /><span>No</span></label></div>
               </fieldset>
               <div id="current-study" class="conditional hidden">
@@ -176,7 +175,7 @@
               </div>
 
               <fieldset class="field-block">
-                <legend>¿Está interesado/a en iniciar o continuar estudios de formación académica? <b>*</b></legend>
+                <legend>¿Está interesado/a en iniciar o continuar estudios para obtener un título académico? <b>*</b></legend>
                 <div class="radio-cards two-col">
                   <label><input type="radio" name="interesFormacion" value="Corto plazo" required /><span>Sí, en el corto plazo</span></label>
                   <label><input type="radio" name="interesFormacion" value="Mediano plazo" /><span>Sí, en el mediano plazo</span></label>
@@ -192,8 +191,8 @@
                   <label class="field"><span>Relación deseada con su carrera <b>*</b></span><select name="relacionFormacion"><option value="">Seleccione...</option><option>Directamente relacionada</option><option>Preferentemente relacionada</option><option>Puede ser transversal</option></select></label>
                   <label class="field"><span>¿Cuándo estaría dispuesto/a a iniciar? <b>*</b></span><select name="inicioPrevisto"><option value="">Seleccione...</option><option>Inmediatamente</option><option>Dentro de 6 meses</option><option>Entre 6 y 12 meses</option><option>Entre 1 y 2 años</option><option>En más de 2 años</option><option>No definido</option></select></label>
                   <label class="field"><span>Modalidad preferida <b>*</b></span><select name="modalidadFormacion"><option value="">Seleccione...</option><option>Presencial</option><option>En línea</option><option>Híbrida</option><option>Indiferente</option></select></label>
-                  <label class="field"><span>Principal dificultad para estudiar <b>*</b></span><select name="barreraFormacion"><option value="">Seleccione...</option><option>Costo</option><option>Falta de tiempo</option><option>Horario laboral</option><option>Responsabilidades familiares</option><option>Requisitos de admisión</option><option>Falta de programas adecuados</option><option>Ubicación / distancia</option><option>No identifico dificultades</option><option>Otra</option></select></label>
-                  <label class="field"><span>Apoyo institucional más importante <b>*</b></span><select name="apoyoFormacion"><option value="">Seleccione...</option><option>Patrocinio / apoyo económico</option><option>Horas institucionales para formación</option><option>Flexibilidad de horarios</option><option>Asesoría para seleccionar programa</option><option>Apoyo en procesos de admisión</option><option>Convenios con universidades</option><option>Seguimiento académico</option><option>No requiero apoyo</option><option>Otro</option></select></label>
+                  <label class="field"><span>Principal dificultad para estudiar <b>*</b></span><select name="barreraFormacion"><option value="">Seleccione...</option><option>Falta de tiempo</option><option>Horario laboral</option><option>Responsabilidades familiares</option><option>Requisitos de admisión</option><option>Falta de programas adecuados</option><option>Ubicación / distancia</option><option>No identifico dificultades</option><option>Otra</option></select></label>
+                  <label class="field"><span>Condición institucional que facilitaría su formación <b>*</b></span><select name="apoyoFormacion"><option value="">Seleccione...</option><option>Flexibilidad de horarios</option><option>Asesoría para seleccionar programa</option><option>Apoyo en procesos de admisión</option><option>Convenios con universidades</option><option>Seguimiento académico</option><option>No requiero apoyo</option><option>Otra</option></select></label>
                 </div>
               </div>
             </section>
@@ -223,6 +222,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="config.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=20261002-2215"></script>
 </body>
 </html>
