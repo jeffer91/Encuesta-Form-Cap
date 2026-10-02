@@ -138,8 +138,8 @@ async function createSubmission(request: Request) {
       [text(docente.cedula), text(docente.nombres, 120), text(docente.apellidos, 120), text(docente.correoInstitucional, 254).toLowerCase(), text(docente.correoPersonal, 254).toLowerCase(), text(docente.celular, 15)]
     );
     const survey = await client.query(
-      `INSERT INTO encuestas (docente_id,periodo_id,carrera_principal_codigo,programa,dedicacion,sede,asignatura_compleja,causa_asignatura,refuerzo_asignatura)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,
+      `INSERT INTO encuestas (docente_id,periodo_id,carrera_principal_codigo,programa,dedicacion,sede,modalidad,asignatura_compleja,causa_asignatura,refuerzo_asignatura)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
       [teacher.rows[0].id, period.rows[0].id, text(perfil.carreraPrincipal), text(perfil.programa), text(perfil.dedicacion), text(perfil.sede), text(perfil.asignaturaCompleja, 250), text(perfil.causaAsignatura), text(perfil.refuerzoAsignatura)]
     );
     const surveyId = survey.rows[0].id;
@@ -151,7 +151,7 @@ async function createSubmission(request: Request) {
     );
     const selections: Array<[string, unknown]> = [
       ["areas_capacitadas", cap.areasCapacitadas], ["metodologias", cap.metodologias], ["herramientas", cap.herramientas],
-      ["dificultades_estudiantes", cap.dificultadesEstudiantes], ["necesidades", cap.necesidades], ["recursos", cap.recursos], ["limitaciones", cap.limitaciones]
+      ["dificultades_estudiantes", cap.dificultadesEstudiantes], ["necesidades", cap.necesidades]
     ];
     for (const [category, values] of selections) for (const value of list(values)) {
       await client.query("INSERT INTO capacitacion_selecciones (encuesta_id,categoria,valor) VALUES ($1,$2,$3)", [surveyId, category, value]);
