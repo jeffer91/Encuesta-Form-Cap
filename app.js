@@ -78,8 +78,6 @@ const FORMATION_AREAS = [
 ];
 
 let currentStep = 1;
-let adminKey = "";
-let adminRows = [];
 const form = document.querySelector("#teacher-form");
 
 function esc(value = "") {
@@ -114,8 +112,6 @@ function renderCareers() {
   const other = document.querySelector("#other-careers");
   other.innerHTML = CAREERS.map(c => `<label data-career="${c.code}"><input type="checkbox" name="otrasCarreras" value="${c.code}"><span>${esc(c.name)}</span></label>`).join("");
 
-  const filter = document.querySelector("#filter-career");
-  filter.innerHTML += CAREERS.map(c => `<option value="${c.code}">${esc(c.name)}</option>`).join("");
 }
 
 function renderOptions() {
@@ -358,78 +354,10 @@ async function submitTeacher(event) {
   }
 }
 
-function switchView(view) {
-  document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.id === `view-${view}`));
-  document.querySelectorAll(".nav-link").forEach(b => b.classList.toggle("active", b.dataset.view === view));
-  history.replaceState(null, "", `#${view}`);
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
 function bindNavigation() {
-  document.querySelectorAll("[data-view]").forEach(btn => btn.addEventListener("click", () => switchView(btn.dataset.view)));
   document.querySelector("#next-btn").addEventListener("click", () => { if (validateStep(currentStep)) setStep(currentStep + 1); });
   document.querySelector("#back-btn").addEventListener("click", () => setStep(currentStep - 1));
   form.addEventListener("submit", submitTeacher);
-}
-
-async function loadAdmin() {
-  const data = await api(`/api/admin/responses?period=${encodeURIComponent(CONFIG.periodCode || "2026-2027")}`, { headers: { Authorization: `Bearer ${adminKey}` } });
-  adminRows = data.rows || [];
-  document.querySelector("#admin-auth").classList.add("hidden");
-  document.querySelector("#admin-dashboard").classList.remove("hidden");
-  renderAdmin();
-}
-
-function bindAdmin() {
-  document.querySelector("#admin-login").addEventListener("submit", async event => {
-    event.preventDefault();
-    adminKey = document.querySelector("#admin-key").value.trim();
-    const status = document.querySelector("#admin-login-status");
-    status.textContent = "Verificando...";
-    try { await loadAdmin(); status.textContent = ""; }
-    catch (error) { status.textContent = error.message; }
-  });
-  document.querySelector("#refresh-admin").addEventListener("click", async () => { try { await loadAdmin(); showToast("Datos actualizados."); } catch (e) { showToast(e.message); } });
-  ["filter-career", "filter-program", "admin-search"].forEach(id => document.querySelector(`#${id}`).addEventListener("input", renderAdmin));
-  document.querySelector("#export-csv").addEventListener("click", exportCsv);
-  document.querySelector("#print-report").addEventListener("click", () => window.print());
-}
-
-function filteredAdminRows() {
-  const career = document.querySelector("#filter-career").value;
-  const program = document.querySelector("#filter-program").value;
-  const query = document.querySelector("#admin-search").value.trim().toLowerCase();
-  return adminRows.filter(row => (!career || row.carrera_codigo === career) && (!program || row.programa === program) && (!query || `${row.nombres} ${row.cedula}`.toLowerCase().includes(query)));
-}
-
-function pct(n, total) { return total ? `${Math.round((n / total) * 100)}%` : "0%"; }
-function countBy(rows, key) { return rows.reduce((acc, r) => { const v = r[key] || "Sin dato"; acc[v] = (acc[v] || 0) + 1; return acc; }, {}); }
-
-function renderBars(target, counts, limit = 7) {
-  const entries = Object.entries(counts).sort((a,b) => b[1] - a[1]).slice(0, limit);
-  const max = Math.max(...entries.map(([,n]) => n), 1);
-  target.innerHTML = entries.length ? entries.map(([label, n]) => `<div class="bar-row"><span class="bar-label" title="${esc(label)}">${esc(label)}</span><div class="bar-track"><div class="bar-fill" style="width:${(n/max)*100}%"></div></div><span class="bar-value">${n}</span></div>`).join("") : `<div class="empty-state">Sin datos para los filtros seleccionados.</div>`;
-}
-
-function renderAdmin() {
-  const rows = filteredAdminRows();
-  document.querySelector("#metric-responses").textContent = rows.length;
-  document.querySelector("#metric-fourth").textContent = pct(rows.filter(r => /Maestría|Doctorado/.test(r.nivel_academico || "")).length, rows.length);
-  document.querySelector("#metric-interest").textContent = pct(rows.filter(r => ["Corto plazo", "Mediano plazo"].includes(r.interes_formacion)).length, rows.length);
-  document.querySelector("#metric-training").textContent = pct(rows.filter(r => r.capacitacion_12m === "Sí").length, rows.length);
-  renderBars(document.querySelector("#training-chart"), countBy(rows, "necesidad_prioritaria"), 6);
-  renderBars(document.querySelector("#education-chart"), countBy(rows, "nivel_academico"), 7);
-  document.querySelector("#responses-body").innerHTML = rows.length ? rows.map(r => `<tr><td><strong>${esc(r.nombres)}</strong><br><small>${esc(r.cedula)}</small></td><td>${esc(r.carrera_nombre)}</td><td><span class="tag">${esc(r.programa)}</span></td><td>${esc(r.necesidad_prioritaria || "—")}</td><td>${esc(r.nivel_academico || "—")}</td><td>${esc(r.interes_formacion || "—")}</td><td>${esc(new Date(r.submitted_at).toLocaleDateString("es-EC"))}</td></tr>`).join("") : `<tr><td colspan="7"><div class="empty-state">Sin respuestas para los filtros seleccionados.</div></td></tr>`;
-}
-
-function exportCsv() {
-  const rows = filteredAdminRows();
-  if (!rows.length) return showToast("No hay datos para exportar.");
-  const cols = ["cedula","nombres","correo_institucional","correo_personal","celular","carrera_nombre","programa","dedicacion","sede","asignatura_compleja","necesidad_prioritaria","nivel_necesidad","nivel_academico","interes_formacion","nivel_deseado","area_formacion","submitted_at"];
-  const csv = "\ufeff" + [cols.join(";"), ...rows.map(row => cols.map(c => `"${String(row[c] ?? "").replace(/"/g, '""')}"`).join(";"))].join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob); a.download = `ITSQMET_respuestas_${CONFIG.periodCode || "periodo"}.csv`; a.click(); URL.revokeObjectURL(a.href);
 }
 
 function bindDraft() {
@@ -473,11 +401,8 @@ function init() {
   restoreDraft();
   bindConditionals();
   bindNavigation();
-  bindAdmin();
   bindDraft();
   document.querySelector("#career-select").addEventListener("change", updateCareerContext);
-  const initial = location.hash === "#admin" ? "admin" : "formulario";
-  switchView(initial);
   setStep(1);
 }
 

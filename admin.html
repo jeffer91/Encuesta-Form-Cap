@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b1f3a" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Administración | ITSQMET</title>
+  <link rel="icon" type="image/png" href="assets/logo-itsqmet.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand" aria-label="ITSQMET">
+        <img src="assets/logo-itsqmet.png" alt="ITSQMET" />
+        <span class="brand-copy">
+          <strong>Administración · Necesidades docentes</strong>
+          <small>Período 2026–2027</small>
+        </span>
+      </div>
+    </header>
+
+    <main>
+      <section class="view active" aria-labelledby="admin-title">
+        <div class="admin-heading">
+          <div><span class="eyebrow">Panel institucional</span><h1 id="admin-title">Resultados docentes</h1><p>Seguimiento consolidado de capacitación y formación.</p></div>
+          <div class="admin-actions"><button id="refresh-admin" class="btn secondary" type="button">Actualizar</button><button id="export-csv" class="btn secondary" type="button">Exportar CSV</button><button id="print-report" class="btn primary" type="button">Imprimir / PDF</button></div>
+        </div>
+
+        <div id="admin-auth" class="admin-auth card">
+          <div><h2>Acceso administrativo</h2><p>Ingrese la clave institucional para consultar respuestas y estadísticas.</p></div>
+          <form id="admin-login" class="inline-form"><input id="admin-key" type="password" placeholder="Clave de administración" autocomplete="current-password" required /><button class="btn primary" type="submit">Ingresar</button></form>
+          <div id="admin-login-status" class="field-hint"></div>
+        </div>
+
+        <div id="admin-dashboard" class="hidden">
+          <div class="filters card">
+            <label><span>Período</span><select id="filter-period"><option value="2026-2027">2026–2027</option></select></label>
+            <label><span>Carrera</span><select id="filter-career"><option value="">Todas las carreras</option></select></label>
+            <label><span>Programa</span><select id="filter-program"><option value="">Todos</option><option>Técnico Superior</option><option>Tecnología Superior</option><option>Tecnología Universitaria</option></select></label>
+          </div>
+          <div class="metric-grid">
+            <article class="metric card"><span>Respuestas</span><strong id="metric-responses">0</strong><small>docentes registrados</small></article>
+            <article class="metric card"><span>Con cuarto nivel</span><strong id="metric-fourth">0%</strong><small>maestría o doctorado</small></article>
+            <article class="metric card"><span>Interés en formación</span><strong id="metric-interest">0%</strong><small>corto o mediano plazo</small></article>
+            <article class="metric card"><span>Capacitación reciente</span><strong id="metric-training">0%</strong><small>últimos 12 meses</small></article>
+          </div>
+          <div class="analytics-grid">
+            <article class="card analytics-card"><div class="card-title"><h2>Necesidades de capacitación</h2><span>Top 6</span></div><div id="training-chart" class="bar-chart"></div></article>
+            <article class="card analytics-card"><div class="card-title"><h2>Nivel académico actual</h2><span>Distribución</span></div><div id="education-chart" class="bar-chart"></div></article>
+          </div>
+          <article class="card table-card">
+            <div class="card-title"><div><h2>Respuestas registradas</h2><p>Detalle por docente y carrera principal.</p></div><input id="admin-search" type="search" placeholder="Buscar docente o cédula" /></div>
+            <div class="table-wrap"><table><thead><tr><th>Docente</th><th>Carrera principal</th><th>Programa</th><th>Capacitación prioritaria</th><th>Nivel actual</th><th>Interés formación</th><th>Fecha</th></tr></thead><tbody id="responses-body"></tbody></table></div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
