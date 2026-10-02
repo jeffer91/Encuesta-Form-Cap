@@ -97,6 +97,7 @@ h1 { margin-bottom: 3px; color: var(--navy); font-family: Georgia, "Times New Ro
 .section-head p { margin: 0; color: var(--muted); font-size: .77rem; }
 .field-grid { display: grid; gap: 12px 14px; }
 .field-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.field-split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .field.full { grid-column: 1 / -1; }
 .field, .filters label { display: grid; gap: 5px; color: var(--text); font-size: .78rem; font-weight: 650; }
 .field > span b, legend b { color: var(--danger); }
