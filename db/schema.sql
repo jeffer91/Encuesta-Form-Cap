@@ -45,12 +45,15 @@ CREATE TABLE IF NOT EXISTS encuestas (
   programa text NOT NULL,
   dedicacion text NOT NULL,
   sede text NOT NULL,
+  modalidad text NOT NULL,
   asignatura_compleja text NOT NULL,
   causa_asignatura text NOT NULL,
   refuerzo_asignatura text NOT NULL,
   enviado_en timestamptz NOT NULL DEFAULT now(),
   UNIQUE (docente_id, periodo_id)
 );
+
+ALTER TABLE encuestas ADD COLUMN IF NOT EXISTS modalidad text NOT NULL DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS docente_carreras (
   encuesta_id uuid NOT NULL REFERENCES encuestas(id) ON DELETE CASCADE,
