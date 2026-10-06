@@ -3,7 +3,7 @@ import { attachDatabasePool } from "@neon/functions";
 import pg from "pg";
 
 const { Pool } = pg;
-const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
+const pool = new Pool({ connectionString: process.env.DATABASE_URL_CUSTOM || process.env.DATABASE_URL, max: 5 });
 attachDatabasePool(pool);
 
 const ALLOWED_ORIGINS = new Set([
