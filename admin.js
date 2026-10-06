@@ -43,22 +43,91 @@ const authHeaders = () => ({ Authorization: `Bearer ${adminKey}` });
 function renderCareers() { document.querySelector("#filter-career").innerHTML += CAREERS.map(([code, name]) => `<option value="${code}">${esc(name)}</option>`).join(""); }
 async function loadAdmin() { const data = await api(`/api/admin/responses?period=${encodeURIComponent(CONFIG.periodCode || "2026-2027")}`, { headers: authHeaders() }); adminRows = data.rows || []; document.querySelector("#admin-auth").classList.add("hidden"); document.querySelector("#admin-dashboard").classList.remove("hidden"); renderAdmin(); }
 
+function filteredContextRows() {
+  const career = document.querySelector("#filter-career").value;
+  const program = document.querySelector("#filter-program").value;
+  const campus = document.querySelector("#filter-campus").value;
+  return adminRows.filter(row => (!career || row.carrera_codigo === career) && (!program || row.programa === program) && (!campus || row.sede === campus));
+}
 function filteredAdminRows() {
-  const career = document.querySelector("#filter-career").value, program = document.querySelector("#filter-program").value, query = document.querySelector("#admin-search").value.trim().toLowerCase();
-  return adminRows.filter(row => (!career || row.carrera_codigo === career) && (!program || row.programa === program) && (!query || `${row.nombres} ${row.apellidos || ""} ${row.cedula}`.toLowerCase().includes(query)));
+  const query = document.querySelector("#admin-search").value.trim().toLowerCase();
+  return filteredContextRows().filter(row => !query || `${row.nombres || ""} ${row.apellidos || ""} ${row.cedula || ""}`.toLowerCase().includes(query));
 }
 function pct(n, total) { return total ? `${Math.round((n / total) * 100)}%` : "0%"; }
 function countBy(rows, key) { return rows.reduce((acc, r) => { const v = r[key] || "Sin dato"; acc[v] = (acc[v] || 0) + 1; return acc; }, {}); }
+function countSelections(rows, key) { return rows.reduce((acc, row) => { (Array.isArray(row[key]) ? row[key] : []).forEach(value => { if (value) acc[value] = (acc[value] || 0) + 1; }); return acc; }, {}); }
+function sortedCounts(counts) { return Object.entries(counts).sort((a,b) => b[1] - a[1] || a[0].localeCompare(b[0], "es")); }
+function topValue(rows, key) { return sortedCounts(countBy(rows, key)).find(([label]) => label !== "Sin dato")?.[0] || "—"; }
 function renderBars(target, counts, limit = 7) { const entries = Object.entries(counts).sort((a,b) => b[1] - a[1]).slice(0, limit), max = Math.max(...entries.map(([,n]) => n), 1); target.innerHTML = entries.length ? entries.map(([label, n]) => `<div class="bar-row"><span class="bar-label" title="${esc(label)}">${esc(label)}</span><div class="bar-track"><div class="bar-fill" style="width:${(n/max)*100}%"></div></div><span class="bar-value">${n}</span></div>`).join("") : `<div class="empty-state">Sin datos para los filtros seleccionados.</div>`; }
 
+function renderStatList(target, counts, total, limit = 0) {
+  let entries = sortedCounts(counts).filter(([label, value]) => label !== "Sin dato" && value > 0);
+  if (limit) entries = entries.slice(0, limit);
+  target.innerHTML = entries.length ? `<div class="stat-list">${entries.map(([label, value]) => {
+    const percentage = total ? Math.round((value / total) * 100) : 0;
+    return `<div class="stat-list-row"><div class="stat-list-label"><span title="${esc(label)}">${esc(label)}</span><small>${value} docente${value === 1 ? "" : "s"}</small></div><div class="stat-list-meter"><span style="width:${percentage}%"></span></div><strong>${percentage}%</strong></div>`;
+  }).join("")}</div>` : `<div class="empty-state compact">Sin datos para los filtros seleccionados.</div>`;
+}
+
+function renderStatistics(rows) {
+  const total = rows.length;
+  const activeCareers = new Set(rows.map(row => row.carrera_codigo).filter(Boolean)).size;
+  document.querySelector("#statistics-total").textContent = total;
+  document.querySelector("#statistics-careers").textContent = activeCareers;
+  const careerSelect = document.querySelector("#filter-career"), programSelect = document.querySelector("#filter-program"), campusSelect = document.querySelector("#filter-campus");
+  const context = [careerSelect.selectedOptions[0]?.textContent || "Todas las carreras", programSelect.value || "Todos los programas", campusSelect.value || "Todas las sedes"];
+  document.querySelector("#statistics-context").textContent = `${total} respuesta${total === 1 ? "" : "s"} analizada${total === 1 ? "" : "s"} · ${context.join(" · ")}`;
+
+  const careerGroups = new Map();
+  rows.forEach(row => { const key = row.carrera_codigo || row.carrera_nombre || "Sin dato"; if (!careerGroups.has(key)) careerGroups.set(key, []); careerGroups.get(key).push(row); });
+  const careerRows = [...careerGroups.values()].sort((a,b) => b.length - a.length || String(a[0]?.carrera_nombre || "").localeCompare(String(b[0]?.carrera_nombre || ""), "es"));
+  document.querySelector("#career-stats-body").innerHTML = careerRows.length ? careerRows.map(group => {
+    const first = group[0] || {}, groupTotal = group.length;
+    const trained = group.filter(row => row.capacitacion_12m === "Sí").length;
+    const interested = group.filter(row => ["Corto plazo","Mediano plazo"].includes(row.interes_formacion)).length;
+    const fourth = group.filter(row => /Maestría|Doctorado/.test(row.nivel_academico || "")).length;
+    return `<tr><td><strong>${esc(first.carrera_nombre || "Sin dato")}</strong><small class="cell-sub">${esc(first.programa || "")}</small></td><td><strong class="number-cell">${groupTotal}</strong></td><td>${pct(groupTotal,total)}</td><td>${pct(trained,groupTotal)}</td><td>${pct(interested,groupTotal)}</td><td>${pct(fourth,groupTotal)}</td><td>${esc(topValue(group,"necesidad_prioritaria"))}</td></tr>`;
+  }).join("") : `<tr><td colspan="7"><div class="empty-state">Sin datos para los filtros seleccionados.</div></td></tr>`;
+
+  const selectedNeeds = countSelections(rows, "necesidades");
+  const priorityNeeds = countBy(rows, "necesidad_prioritaria");
+  const needEntries = sortedCounts(selectedNeeds).filter(([,value]) => value > 0);
+  document.querySelector("#needs-stats-body").innerHTML = needEntries.length ? needEntries.map(([label, selected]) => {
+    const priority = priorityNeeds[label] || 0;
+    const high = rows.filter(row => row.necesidad_prioritaria === label && ["Alta","Muy alta"].includes(row.nivel_necesidad)).length;
+    return `<tr><td><strong>${esc(label)}</strong></td><td><span class="count-pill">${selected}</span></td><td>${priority}</td><td><div class="table-meter"><span style="width:${total ? Math.round((selected/total)*100) : 0}%"></span><b>${pct(selected,total)}</b></div></td><td>${priority ? `${high}/${priority} · ${pct(high,priority)}` : "—"}</td></tr>`;
+  }).join("") : `<tr><td colspan="5"><div class="empty-state">Sin necesidades registradas para los filtros seleccionados.</div></td></tr>`;
+
+  renderStatList(document.querySelector("#education-stats"), countBy(rows,"nivel_academico"), total);
+  renderStatList(document.querySelector("#interest-stats"), countBy(rows,"interes_formacion"), total);
+
+  const trainingTarget = document.querySelector("#training-stats");
+  trainingTarget.innerHTML = `<div class="stat-split"><section><h3>Capacitación últimos 12 meses</h3><div id="training-received-list"></div></section><section><h3>Aplicación de lo aprendido</h3><div id="training-application-list"></div></section></div>`;
+  renderStatList(document.querySelector("#training-received-list"), countBy(rows,"capacitacion_12m"), total);
+  const trainedRows = rows.filter(row => row.capacitacion_12m === "Sí");
+  renderStatList(document.querySelector("#training-application-list"), countBy(trainedRows,"aplica_capacitacion"), trainedRows.length);
+
+  const locationTarget = document.querySelector("#location-stats");
+  locationTarget.innerHTML = `<div class="stat-split"><section><h3>Sede principal</h3><div id="campus-stats-list"></div></section><section><h3>Modalidad principal</h3><div id="modality-stats-list"></div></section></div>`;
+  renderStatList(document.querySelector("#campus-stats-list"), countBy(rows,"sede"), total);
+  renderStatList(document.querySelector("#modality-stats-list"), countBy(rows,"modalidad"), total);
+
+  renderStatList(document.querySelector("#methodology-stats"), countSelections(rows,"metodologias"), total);
+  renderStatList(document.querySelector("#tools-stats"), countSelections(rows,"herramientas"), total);
+  renderStatList(document.querySelector("#difficulty-stats"), countSelections(rows,"dificultades_estudiantes"), total);
+}
+
 function renderAdmin() {
-  const rows = filteredAdminRows();
+  const rows = filteredContextRows();
+  const responseRows = filteredAdminRows();
   document.querySelector("#metric-responses").textContent = rows.length;
+  document.querySelector("#responses-tab-count").textContent = rows.length;
   document.querySelector("#metric-fourth").textContent = pct(rows.filter(r => /Maestría|Doctorado/.test(r.nivel_academico || "")).length, rows.length);
   document.querySelector("#metric-interest").textContent = pct(rows.filter(r => ["Corto plazo", "Mediano plazo"].includes(r.interes_formacion)).length, rows.length);
   document.querySelector("#metric-training").textContent = pct(rows.filter(r => r.capacitacion_12m === "Sí").length, rows.length);
   renderBars(document.querySelector("#training-chart"), countBy(rows, "necesidad_prioritaria"), 6); renderBars(document.querySelector("#education-chart"), countBy(rows, "nivel_academico"), 7);
-  document.querySelector("#responses-body").innerHTML = rows.length ? rows.map(r => `<tr><td><strong>${esc(`${r.nombres || ""} ${r.apellidos || ""}`.trim())}</strong><br><small>${esc(r.cedula)}</small></td><td>${esc(r.carrera_nombre)}</td><td><span class="tag">${esc(r.programa)}</span></td><td>${esc(r.necesidad_prioritaria || "—")}</td><td>${esc(r.nivel_academico || "—")}</td><td>${esc(r.interes_formacion || "—")}</td><td>${esc(new Date(r.submitted_at).toLocaleDateString("es-EC"))}</td><td><div class="row-actions"><button class="table-action edit" type="button" data-action="edit" data-id="${esc(r.id)}">✎ <span>Editar</span></button><button class="table-action delete" type="button" data-action="delete" data-id="${esc(r.id)}">⌫ <span>Eliminar</span></button></div></td></tr>`).join("") : `<tr><td colspan="8"><div class="empty-state">Sin respuestas para los filtros seleccionados.</div></td></tr>`;
+  renderStatistics(rows);
+  document.querySelector("#responses-body").innerHTML = responseRows.length ? responseRows.map(r => `<tr><td><strong>${esc(`${r.nombres || ""} ${r.apellidos || ""}`.trim())}</strong><br><small>${esc(r.cedula)}</small></td><td>${esc(r.carrera_nombre)}</td><td><span class="tag">${esc(r.programa)}</span></td><td>${esc(r.necesidad_prioritaria || "—")}</td><td>${esc(r.nivel_academico || "—")}</td><td>${esc(r.interes_formacion || "—")}</td><td>${esc(new Date(r.submitted_at).toLocaleDateString("es-EC"))}</td><td><div class="row-actions"><button class="table-action edit" type="button" data-action="edit" data-id="${esc(r.id)}">✎ <span>Editar</span></button><button class="table-action delete" type="button" data-action="delete" data-id="${esc(r.id)}">⌫ <span>Eliminar</span></button></div></td></tr>`).join("") : `<tr><td colspan="8"><div class="empty-state">Sin respuestas para los filtros seleccionados.</div></td></tr>`;
 }
 
 function optionList(items, current = "") { return items.map(item => { const [value, label] = Array.isArray(item) ? item : [item, item]; return `<option value="${esc(value)}" ${value === current ? "selected" : ""}>${esc(label)}</option>`; }).join(""); }
@@ -109,10 +178,20 @@ function exportCsv() {
   a.href = URL.createObjectURL(blob); a.download = `ITSQMET_respuestas_${CONFIG.periodCode || "periodo"}.csv`; a.click(); URL.revokeObjectURL(a.href);
 }
 
+function setAdminView(view) {
+  document.querySelectorAll("[data-admin-view]").forEach(button => {
+    const active = button.dataset.adminView === view;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", String(active));
+  });
+  ["summary","statistics","responses"].forEach(name => document.querySelector(`#admin-view-${name}`).classList.toggle("hidden", name !== view));
+}
+
 function bindAdmin() {
   document.querySelector("#admin-login").addEventListener("submit", async event => { event.preventDefault(); adminKey = document.querySelector("#admin-key").value.trim(); const status = document.querySelector("#admin-login-status"); status.textContent = "Verificando..."; try { await loadAdmin(); status.textContent = ""; } catch (error) { status.textContent = error.message; } });
   document.querySelector("#refresh-admin").addEventListener("click", async () => { try { await loadAdmin(); showToast("Datos actualizados."); } catch (error) { showToast(error.message); } });
-  ["filter-career", "filter-program", "admin-search"].forEach(id => document.querySelector(`#${id}`).addEventListener("input", renderAdmin));
+  ["filter-career", "filter-program", "filter-campus", "admin-search"].forEach(id => document.querySelector(`#${id}`).addEventListener("input", renderAdmin));
+  document.querySelectorAll("[data-admin-view]").forEach(button => button.addEventListener("click", () => setAdminView(button.dataset.adminView)));
   document.querySelector("#export-csv").addEventListener("click", exportCsv); document.querySelector("#print-report").addEventListener("click", () => window.print());
   document.querySelector("#responses-body").addEventListener("click", event => { const button = event.target.closest("[data-action]"); if (!button) return; const row = adminRows.find(item => item.id === button.dataset.id); if (!row) return; if (button.dataset.action === "edit") openEdit(row); if (button.dataset.action === "delete") { deletingId = row.id; document.querySelector("#delete-message").innerHTML = `¿Confirma que desea eliminar la respuesta de <strong>${esc(`${row.nombres} ${row.apellidos}`.trim())}</strong>?`; document.querySelector("#delete-dialog").showModal(); } });
   ["#close-edit", "#cancel-edit"].forEach(sel => document.querySelector(sel).addEventListener("click", () => document.querySelector("#edit-dialog").close()));

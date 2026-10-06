@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20261006-1715" />
+  <link rel="stylesheet" href="styles.css?v=20261006-1605" />
 </head>
 <body>
   <div class="app-shell">
@@ -42,21 +42,61 @@
             <label><span>Período</span><select id="filter-period"><option value="2026-2027">2026–2027</option></select></label>
             <label><span>Carrera</span><select id="filter-career"><option value="">Todas las carreras</option></select></label>
             <label><span>Programa</span><select id="filter-program"><option value="">Todos</option><option>Técnico Superior</option><option>Tecnología Superior</option><option>Tecnología Universitaria</option></select></label>
+            <label><span>Sede</span><select id="filter-campus"><option value="">Todas las sedes</option><option>Matriz</option><option>Magdalena</option><option>Sur</option><option>Manta</option></select></label>
           </div>
-          <div class="metric-grid">
-            <article class="metric card"><span>Respuestas</span><strong id="metric-responses">0</strong><small>docentes registrados</small></article>
-            <article class="metric card"><span>Con cuarto nivel</span><strong id="metric-fourth">0%</strong><small>maestría o doctorado</small></article>
-            <article class="metric card"><span>Interés en formación</span><strong id="metric-interest">0%</strong><small>corto o mediano plazo</small></article>
-            <article class="metric card"><span>Capacitación reciente</span><strong id="metric-training">0%</strong><small>últimos 12 meses</small></article>
-          </div>
-          <div class="analytics-grid">
-            <article class="card analytics-card"><div class="card-title"><h2>Necesidades de capacitación</h2><span>Top 6</span></div><div id="training-chart" class="bar-chart"></div></article>
-            <article class="card analytics-card"><div class="card-title"><h2>Nivel académico actual</h2><span>Distribución</span></div><div id="education-chart" class="bar-chart"></div></article>
-          </div>
-          <article class="card table-card">
-            <div class="card-title"><div><h2>Respuestas registradas</h2><p>Detalle por docente y carrera principal.</p></div><input id="admin-search" type="search" placeholder="Buscar docente o cédula" /></div>
-            <div class="table-wrap"><table><thead><tr><th>Docente</th><th>Carrera principal</th><th>Programa</th><th>Capacitación prioritaria</th><th>Nivel actual</th><th>Interés formación</th><th>Fecha</th><th>Acciones</th></tr></thead><tbody id="responses-body"></tbody></table></div>
-          </article>
+
+          <nav class="admin-view-tabs" aria-label="Vistas del panel">
+            <button type="button" class="admin-view-tab active" data-admin-view="summary">Resumen</button>
+            <button type="button" class="admin-view-tab" data-admin-view="statistics">Estadísticas</button>
+            <button type="button" class="admin-view-tab" data-admin-view="responses">Respuestas <span id="responses-tab-count">0</span></button>
+          </nav>
+
+          <section id="admin-view-summary" class="admin-view-panel">
+            <div class="metric-grid">
+              <article class="metric card"><span>Respuestas</span><strong id="metric-responses">0</strong><small>docentes registrados</small></article>
+              <article class="metric card"><span>Con cuarto nivel</span><strong id="metric-fourth">0%</strong><small>maestría o doctorado</small></article>
+              <article class="metric card"><span>Interés en formación</span><strong id="metric-interest">0%</strong><small>corto o mediano plazo</small></article>
+              <article class="metric card"><span>Capacitación reciente</span><strong id="metric-training">0%</strong><small>últimos 12 meses</small></article>
+            </div>
+            <div class="analytics-grid">
+              <article class="card analytics-card"><div class="card-title"><h2>Necesidades de capacitación</h2><span>Prioridad principal · Top 6</span></div><div id="training-chart" class="bar-chart"></div></article>
+              <article class="card analytics-card"><div class="card-title"><h2>Nivel académico actual</h2><span>Distribución</span></div><div id="education-chart" class="bar-chart"></div></article>
+            </div>
+          </section>
+
+          <section id="admin-view-statistics" class="admin-view-panel hidden">
+            <div class="statistics-intro card">
+              <div><span class="eyebrow">Lectura institucional</span><h2>Estadísticas del diagnóstico</h2><p id="statistics-context">Los resultados responden a los filtros seleccionados.</p></div>
+              <div class="statistics-kpis"><span><strong id="statistics-total">0</strong> docentes</span><span><strong id="statistics-careers">0</strong> carreras</span></div>
+            </div>
+
+            <article class="card stats-card stats-card-wide">
+              <div class="card-title"><div><h2>Resultados por carrera</h2><p>Comparación de cobertura, formación y prioridades.</p></div><span>Vista comparativa</span></div>
+              <div class="table-wrap"><table class="stats-table"><thead><tr><th>Carrera</th><th>Docentes</th><th>% total</th><th>Capacitación reciente</th><th>Interés formación</th><th>Cuarto nivel</th><th>Principal necesidad</th></tr></thead><tbody id="career-stats-body"></tbody></table></div>
+            </article>
+
+            <article class="card stats-card stats-card-wide">
+              <div class="card-title"><div><h2>Necesidades de fortalecimiento</h2><p>Incluye las hasta 3 áreas seleccionadas por cada docente, no solo la prioridad principal.</p></div><span>Mayor a menor</span></div>
+              <div class="table-wrap"><table class="stats-table"><thead><tr><th>Área</th><th>Entre las 3 seleccionadas</th><th>Prioridad #1</th><th>% docentes</th><th>Prioridad alta / muy alta</th></tr></thead><tbody id="needs-stats-body"></tbody></table></div>
+            </article>
+
+            <div class="stats-grid">
+              <article class="card stats-card"><div class="card-title"><div><h2>Formación académica</h2><p>Nivel académico más alto.</p></div></div><div id="education-stats"></div></article>
+              <article class="card stats-card"><div class="card-title"><div><h2>Interés en formación</h2><p>Horizonte declarado por los docentes.</p></div></div><div id="interest-stats"></div></article>
+              <article class="card stats-card"><div class="card-title"><div><h2>Capacitación recibida</h2><p>Últimos 12 meses y aplicación.</p></div></div><div id="training-stats"></div></article>
+              <article class="card stats-card"><div class="card-title"><div><h2>Sede y modalidad</h2><p>Distribución de la población encuestada.</p></div></div><div id="location-stats"></div></article>
+              <article class="card stats-card"><div class="card-title"><div><h2>Metodologías utilizadas</h2><p>Pregunta de selección múltiple.</p></div></div><div id="methodology-stats"></div></article>
+              <article class="card stats-card"><div class="card-title"><div><h2>Herramientas tecnológicas</h2><p>Uso regular declarado.</p></div></div><div id="tools-stats"></div></article>
+              <article class="card stats-card stats-card-wide"><div class="card-title"><div><h2>Dificultades detectadas en estudiantes</h2><p>Frecuencia con la que los docentes identifican cada dificultad.</p></div><span>Incidencia</span></div><div id="difficulty-stats"></div></article>
+            </div>
+          </section>
+
+          <section id="admin-view-responses" class="admin-view-panel hidden">
+            <article class="card table-card">
+              <div class="card-title"><div><h2>Respuestas registradas</h2><p>Detalle por docente y carrera principal.</p></div><input id="admin-search" type="search" placeholder="Buscar docente o cédula" /></div>
+              <div class="table-wrap"><table><thead><tr><th>Docente</th><th>Carrera principal</th><th>Programa</th><th>Capacitación prioritaria</th><th>Nivel actual</th><th>Interés formación</th><th>Fecha</th><th>Acciones</th></tr></thead><tbody id="responses-body"></tbody></table></div>
+            </article>
+          </section>
         </div>
       </section>
     </main>
@@ -80,6 +120,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="config.js?v=20261006-1150"></script>
-  <script src="admin.js?v=20261006-1715"></script>
+  <script src="admin.js?v=20261006-1605"></script>
 </body>
 </html>
