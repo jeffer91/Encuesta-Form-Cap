@@ -69,6 +69,8 @@ const FORMATION_AREAS = [
 ];
 
 let currentStep = 1;
+let trainingPage = 1;
+const TRAINING_PAGE_COUNT = 4;
 const form = document.querySelector("#teacher-form");
 
 function esc(value = "") {
@@ -136,6 +138,70 @@ function bindConditionals() {
     if (name === "carreraPrincipal") updateCareerContext();
     if (name === "necesidades") enforceMaxNeeds(event.target);
   });
+}
+
+function renderTrainingPage() {
+  const pages = [...document.querySelectorAll("[data-training-page]")];
+  if (!pages.length) return;
+  pages.forEach(page => page.classList.toggle("active", Number(page.dataset.trainingPage) === trainingPage));
+  document.querySelectorAll("[data-training-indicator]").forEach(indicator => {
+    const n = Number(indicator.dataset.trainingIndicator);
+    indicator.classList.toggle("active", n === trainingPage);
+    indicator.classList.toggle("done", n < trainingPage);
+  });
+  const label = document.querySelector("#training-page-label");
+  if (label) label.textContent = `${trainingPage} de ${TRAINING_PAGE_COUNT}`;
+  const next = document.querySelector("#next-btn");
+  if (currentStep === 3 && next) next.textContent = trainingPage < TRAINING_PAGE_COUNT ? "Siguiente" : "Continuar";
+}
+
+function setTrainingPage(page, scroll = true) {
+  trainingPage = Math.min(TRAINING_PAGE_COUNT, Math.max(1, page));
+  renderTrainingPage();
+  if (scroll) document.querySelector('[data-step="3"] .section-head')?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function validateTrainingPage(page) {
+  const panel = document.querySelector(`[data-training-page="${page}"]`);
+  if (!panel) return true;
+  panel.querySelectorAll(".invalid").forEach(el => el.classList.remove("invalid"));
+  const required = [...panel.querySelectorAll("[required]")].filter(el => !el.closest(".hidden"));
+
+  for (const field of required) {
+    if (field.type === "radio") {
+      if (!panel.querySelector(`input[name="${CSS.escape(field.name)}"]:checked`)) {
+        showToast("Complete la pregunta obligatoria para continuar.");
+        field.closest("fieldset")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        return false;
+      }
+      continue;
+    }
+    if (!field.value.trim()) {
+      field.classList.add("invalid");
+      field.focus();
+      showToast("Complete los campos obligatorios.");
+      return false;
+    }
+  }
+
+  const groups = page === 2
+    ? [["metodologias", "metodología"], ["herramientas", "herramienta tecnológica"]]
+    : page === 3
+      ? [["dificultadesEstudiantes", "dificultad de los estudiantes"]]
+      : [];
+
+  for (const [name, label] of groups) {
+    if (!panel.querySelector(`input[name="${name}"]:checked`)) {
+      showToast(`Seleccione al menos una opción en ${label}.`);
+      return false;
+    }
+  }
+
+  if (page === 4 && !panel.querySelector('input[name="necesidades"]:checked')) {
+    showToast("Seleccione al menos una necesidad de capacitación.");
+    return false;
+  }
+  return true;
 }
 
 function enforceMaxNeeds(changed) {
@@ -236,6 +302,9 @@ function setStep(step) {
   document.querySelector("#back-btn").classList.toggle("hidden", currentStep === 1);
   document.querySelector("#next-btn").classList.toggle("hidden", currentStep === 5);
   document.querySelector("#submit-btn").classList.toggle("hidden", currentStep !== 5);
+  const next = document.querySelector("#next-btn");
+  if (currentStep === 3) renderTrainingPage();
+  else if (next) next.textContent = "Continuar";
   if (currentStep === 5) renderReview();
   document.querySelector(".form-card").scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -346,8 +415,25 @@ async function submitTeacher(event) {
 }
 
 function bindNavigation() {
-  document.querySelector("#next-btn").addEventListener("click", () => { if (validateStep(currentStep)) setStep(currentStep + 1); });
-  document.querySelector("#back-btn").addEventListener("click", () => setStep(currentStep - 1));
+  document.querySelector("#next-btn").addEventListener("click", () => {
+    if (currentStep === 3) {
+      if (!validateTrainingPage(trainingPage)) return;
+      if (trainingPage < TRAINING_PAGE_COUNT) return setTrainingPage(trainingPage + 1);
+      return setStep(4);
+    }
+    if (!validateStep(currentStep)) return;
+    const from = currentStep;
+    setStep(currentStep + 1);
+    if (from === 2) setTrainingPage(1, false);
+  });
+  document.querySelector("#back-btn").addEventListener("click", () => {
+    if (currentStep === 3 && trainingPage > 1) return setTrainingPage(trainingPage - 1);
+    if (currentStep === 4) {
+      setStep(3);
+      return setTrainingPage(TRAINING_PAGE_COUNT, false);
+    }
+    setStep(currentStep - 1);
+  });
   form.addEventListener("submit", submitTeacher);
 }
 

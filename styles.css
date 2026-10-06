@@ -237,3 +237,66 @@ td strong { color: var(--navy); }
   .card { box-shadow: none; break-inside: avoid; }
   .admin-heading { margin-bottom: 12px; }
 }
+
+
+/* Paginación interna del paso de capacitación */
+.training-subprogress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: -2px 0 18px;
+  padding: 10px 12px;
+  border: 1px solid #e1e6ed;
+  border-radius: 11px;
+  background: #f8fafc;
+}
+.training-subprogress-copy { display: flex; align-items: baseline; gap: 8px; }
+.training-subprogress-copy span { color: var(--muted); font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.training-subprogress-copy strong { color: var(--navy); font-size: .8rem; }
+.training-page-dots { display: flex; align-items: center; gap: 6px; }
+.training-page-dots span {
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #ccd4df;
+  border-radius: 50%;
+  color: #6f7b8e;
+  background: #fff;
+  font-size: .68rem;
+  font-weight: 800;
+}
+.training-page-dots span.active { color: #fff; background: var(--navy); border-color: var(--navy); }
+.training-page-dots span.done { color: var(--success); background: #eaf7f0; border-color: #b9e3cc; }
+.training-page { display: none; }
+.training-page.active { display: block; animation: fade .18s ease; }
+.training-page-head {
+  display: grid;
+  grid-template-columns: 31px 1fr;
+  gap: 9px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.training-page-head > span {
+  width: 29px;
+  height: 29px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--navy);
+  background: var(--gold-soft);
+  font-size: .64rem;
+  font-weight: 850;
+}
+.training-page-head h3 { margin: 0; color: var(--navy); font-size: .92rem; }
+.training-page-head p { margin: 1px 0 0; color: var(--muted); font-size: .72rem; }
+.training-frequency { margin-top: 14px; }
+.training-priority-fields { margin-top: 14px; }
+
+@media (max-width: 650px) {
+  .training-subprogress { align-items: center; padding: 9px 10px; }
+  .training-subprogress-copy span { display: none; }
+  .training-page-dots span { width: 25px; height: 25px; font-size: .65rem; }
+  .training-page-head { margin-bottom: 2px; }
+}

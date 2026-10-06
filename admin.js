@@ -85,7 +85,7 @@ function renderAdmin() {
 function exportCsv() {
   const rows = filteredAdminRows();
   if (!rows.length) return showToast("No hay datos para exportar.");
-  const cols = ["cedula","nombres","apellidos","correo_institucional","correo_personal","celular","carrera_nombre","programa","dedicacion","sede","asignatura_compleja","necesidad_prioritaria","nivel_necesidad","nivel_academico","interes_formacion","nivel_deseado","area_formacion","submitted_at"];
+  const cols = ["cedula","nombres","apellidos","correo_institucional","correo_personal","celular","carrera_nombre","programa","dedicacion","sede","modalidad","asignatura_compleja","necesidad_prioritaria","nivel_necesidad","nivel_academico","interes_formacion","nivel_deseado","area_formacion","submitted_at"];
   const csv = "\ufeff" + [cols.join(";"), ...rows.map(row => cols.map(c => `"${String(row[c] ?? "").replace(/"/g, '""')}"`).join(";"))].join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const a = document.createElement("a");

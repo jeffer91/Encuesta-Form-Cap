@@ -7,7 +7,7 @@
   <meta name="description" content="Formulario institucional ITSQMET para la detección de necesidades de capacitación y formación docente." />
   <title>Detección Docente | ITSQMET</title>
   <link rel="icon" type="image/png" href="assets/logo-itsqmet.png" />
-  <link rel="stylesheet" href="styles.css?v=20261002-2215" />
+  <link rel="stylesheet" href="styles.css?v=20261006-1051" />
 </head>
 <body>
   <div class="app-shell">
@@ -82,7 +82,7 @@
               </div>
               <div class="field-grid two">
                 <label class="field"><span>Tipo de dedicación <b>*</b></span><select name="dedicacion" required><option value="">Seleccione...</option><option>Tiempo Completo (TC)</option><option>Medio Tiempo (MT)</option><option>Tiempo Parcial (TP)</option></select></label>
-                <div class="field-split"><label class="field"><span>Sede principal <b>*</b></span><select name="sede" required><option value="">Seleccione...</option><option>Matriz</option><option>Norte</option><option>Sur</option><option>Manta</option></select></label><label class="field"><span>Modalidad principal <b>*</b></span><select name="modalidad" required><option value="">Seleccione...</option><option>Presencial</option><option>En línea</option><option>Híbrida</option></select></label></div>
+                <div class="field-split"><label class="field"><span>Sede principal <b>*</b></span><select name="sede" required><option value="">Seleccione...</option><option>Matriz</option><option>Magdalena</option><option>Sur</option><option>Manta</option></select></label><label class="field"><span>Modalidad principal <b>*</b></span><select name="modalidad" required><option value="">Seleccione...</option><option>Presencial matutino</option><option>Presencial vespertino</option><option>En línea</option><option>PVC</option><option>Intensivo</option></select></label></div>
                 <label class="field full"><span>Asignatura de su carrera principal que considera más compleja de impartir <b>*</b></span><input name="asignaturaCompleja" list="subject-list" placeholder="Escriba o seleccione la asignatura" required /><datalist id="subject-list"></datalist><small class="field-hint">El catálogo se ajustará progresivamente por carrera.</small></label>
               </div>
               <fieldset class="field-block">
@@ -114,40 +114,63 @@
                 <div><h2>Necesidades de capacitación</h2><p>Actualización de corta duración y fortalecimiento de competencias.</p></div>
               </div>
 
-              <fieldset class="field-block">
-                <legend>¿Ha recibido capacitación relacionada con docencia durante los últimos 12 meses? <b>*</b></legend>
-                <div class="segmented" data-radio="capacitacion12m">
-                  <label><input type="radio" name="capacitacion12m" value="Sí" required /><span>Sí</span></label>
-                  <label><input type="radio" name="capacitacion12m" value="No" required /><span>No</span></label>
+              <div class="training-subprogress" aria-label="Progreso dentro de capacitación">
+                <div class="training-subprogress-copy"><span>Capacitación</span><strong id="training-page-label">1 de 4</strong></div>
+                <div class="training-page-dots" aria-hidden="true">
+                  <span class="active" data-training-indicator="1">1</span>
+                  <span data-training-indicator="2">2</span>
+                  <span data-training-indicator="3">3</span>
+                  <span data-training-indicator="4">4</span>
                 </div>
-              </fieldset>
-
-              <div id="training-history" class="conditional hidden">
-                <fieldset class="field-block"><legend>Áreas en las que se ha capacitado</legend><div class="check-grid" data-checkbox-group="areasCapacitadas"></div></fieldset>
-                <label class="field"><span>¿Con qué frecuencia aplica en sus clases lo aprendido?</span><select name="aplicaCapacitacion"><option value="">Seleccione...</option><option>Siempre</option><option>Frecuentemente</option><option>A veces</option><option>Rara vez</option><option>Nunca</option></select></label>
               </div>
 
-              <fieldset class="field-block">
-                <legend>¿Qué metodologías utiliza actualmente? <b>*</b></legend>
-                <div class="check-grid" data-checkbox-group="metodologias"></div>
-              </fieldset>
-              <fieldset class="field-block">
-                <legend>¿Qué herramientas tecnológicas utiliza regularmente? <b>*</b></legend>
-                <div class="check-grid" data-checkbox-group="herramientas"></div>
-              </fieldset>
-              <fieldset class="field-block">
-                <legend>¿Qué dificultades identifica con mayor frecuencia en sus estudiantes? <b>*</b></legend>
-                <div class="check-grid" data-checkbox-group="dificultadesEstudiantes"></div>
-              </fieldset>
-              <fieldset class="field-block priority-block">
-                <legend>Seleccione hasta 3 áreas en las que necesita fortalecer sus competencias <b>*</b></legend>
-                <p class="legend-help">Estas respuestas determinarán las prioridades institucionales y por carrera.</p>
-                <div class="check-grid" data-checkbox-group="necesidades" data-max="3"></div>
-                <div class="selection-counter"><span id="needs-count">0</span>/3 seleccionadas</div>
-              </fieldset>
-              <div class="field-grid two">
-                <label class="field"><span>Necesidad prioritaria <b>*</b></span><select name="necesidadPrioritaria" id="priority-select" required><option value="">Primero seleccione sus necesidades</option></select></label>
-                <label class="field"><span>Nivel de necesidad <b>*</b></span><select name="nivelNecesidad" required><option value="">Seleccione...</option><option>Muy alta</option><option>Alta</option><option>Media</option><option>Baja</option><option>Muy baja</option></select></label>
+              <div class="training-page active" data-training-page="1">
+                <div class="training-page-head"><span>01</span><div><h3>Experiencia reciente</h3><p>Capacitación recibida y aplicación en el aula.</p></div></div>
+                <fieldset class="field-block">
+                  <legend>¿Ha recibido capacitación relacionada con docencia durante los últimos 12 meses? <b>*</b></legend>
+                  <div class="segmented" data-radio="capacitacion12m">
+                    <label><input type="radio" name="capacitacion12m" value="Sí" required /><span>Sí</span></label>
+                    <label><input type="radio" name="capacitacion12m" value="No" required /><span>No</span></label>
+                  </div>
+                </fieldset>
+                <div id="training-history" class="conditional hidden">
+                  <fieldset class="field-block"><legend>Áreas en las que se ha capacitado</legend><div class="check-grid" data-checkbox-group="areasCapacitadas"></div></fieldset>
+                  <label class="field training-frequency"><span>¿Con qué frecuencia aplica en sus clases lo aprendido?</span><select name="aplicaCapacitacion"><option value="">Seleccione...</option><option>Siempre</option><option>Frecuentemente</option><option>A veces</option><option>Rara vez</option><option>Nunca</option></select></label>
+                </div>
+              </div>
+
+              <div class="training-page" data-training-page="2">
+                <div class="training-page-head"><span>02</span><div><h3>Práctica docente</h3><p>Metodologías y herramientas que utiliza actualmente.</p></div></div>
+                <fieldset class="field-block">
+                  <legend>¿Qué metodologías utiliza actualmente? <b>*</b></legend>
+                  <div class="check-grid" data-checkbox-group="metodologias"></div>
+                </fieldset>
+                <fieldset class="field-block">
+                  <legend>¿Qué herramientas tecnológicas utiliza regularmente? <b>*</b></legend>
+                  <div class="check-grid" data-checkbox-group="herramientas"></div>
+                </fieldset>
+              </div>
+
+              <div class="training-page" data-training-page="3">
+                <div class="training-page-head"><span>03</span><div><h3>Dificultades de aprendizaje</h3><p>Identifique las situaciones que observa con mayor frecuencia.</p></div></div>
+                <fieldset class="field-block">
+                  <legend>¿Qué dificultades identifica con mayor frecuencia en sus estudiantes? <b>*</b></legend>
+                  <div class="check-grid" data-checkbox-group="dificultadesEstudiantes"></div>
+                </fieldset>
+              </div>
+
+              <div class="training-page" data-training-page="4">
+                <div class="training-page-head"><span>04</span><div><h3>Prioridades de fortalecimiento</h3><p>Seleccione las necesidades que deben orientar la planificación institucional.</p></div></div>
+                <fieldset class="field-block priority-block">
+                  <legend>Seleccione hasta 3 áreas en las que necesita fortalecer sus competencias <b>*</b></legend>
+                  <p class="legend-help">Estas respuestas determinarán las prioridades institucionales y por carrera.</p>
+                  <div class="check-grid" data-checkbox-group="necesidades" data-max="3"></div>
+                  <div class="selection-counter"><span id="needs-count">0</span>/3 seleccionadas</div>
+                </fieldset>
+                <div class="field-grid two training-priority-fields">
+                  <label class="field"><span>Necesidad prioritaria <b>*</b></span><select name="necesidadPrioritaria" id="priority-select" required><option value="">Primero seleccione sus necesidades</option></select></label>
+                  <label class="field"><span>Nivel de necesidad <b>*</b></span><select name="nivelNecesidad" required><option value="">Seleccione...</option><option>Muy alta</option><option>Alta</option><option>Media</option><option>Baja</option><option>Muy baja</option></select></label>
+                </div>
               </div>
             </section>
 
@@ -222,6 +245,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="config.js"></script>
-  <script src="app.js?v=20261002-2215"></script>
+  <script src="app.js?v=20261006-1051"></script>
 </body>
 </html>

@@ -103,7 +103,7 @@ async function createSubmission(request: Request) {
   const periodCode = text(body.periodCode, 40);
 
   if (!requireFields(docente, ["cedula","nombres","apellidos","correoInstitucional","correoPersonal","celular"]) ||
-      !requireFields(perfil, ["carreraPrincipal","programa","dedicacion","sede","asignaturaCompleja","causaAsignatura","refuerzoAsignatura"]) ||
+      !requireFields(perfil, ["carreraPrincipal","programa","dedicacion","sede","modalidad","asignaturaCompleja","causaAsignatura","refuerzoAsignatura"]) ||
       !requireFields(cap, ["capacitacion12m","necesidadPrioritaria","nivelNecesidad"]) ||
       !requireFields(form, ["nivelAcademico","afinidadTitulo","cursaFormacion","interesFormacion"]) || !periodCode) {
     return json(request, { message: "Faltan respuestas obligatorias." }, 400);
@@ -140,7 +140,7 @@ async function createSubmission(request: Request) {
     const survey = await client.query(
       `INSERT INTO encuestas (docente_id,periodo_id,carrera_principal_codigo,programa,dedicacion,sede,modalidad,asignatura_compleja,causa_asignatura,refuerzo_asignatura)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
-      [teacher.rows[0].id, period.rows[0].id, text(perfil.carreraPrincipal), text(perfil.programa), text(perfil.dedicacion), text(perfil.sede), text(perfil.asignaturaCompleja, 250), text(perfil.causaAsignatura), text(perfil.refuerzoAsignatura)]
+      [teacher.rows[0].id, period.rows[0].id, text(perfil.carreraPrincipal), text(perfil.programa), text(perfil.dedicacion), text(perfil.sede), text(perfil.modalidad), text(perfil.asignaturaCompleja, 250), text(perfil.causaAsignatura), text(perfil.refuerzoAsignatura)]
     );
     const surveyId = survey.rows[0].id;
 
@@ -184,7 +184,7 @@ async function adminResponses(request: Request) {
   const period = text(url.searchParams.get("period") || "2026-2027", 40);
   const result = await pool.query(
     `SELECT e.id, d.cedula, d.nombres, d.apellidos, d.correo_institucional, d.correo_personal, d.celular,
-            e.carrera_principal_codigo AS carrera_codigo, c.nombre AS carrera_nombre, e.programa, e.dedicacion, e.sede,
+            e.carrera_principal_codigo AS carrera_codigo, c.nombre AS carrera_nombre, e.programa, e.dedicacion, e.sede, e.modalidad,
             e.asignatura_compleja, e.causa_asignatura, e.refuerzo_asignatura,
             cr.capacitacion_12m, cr.necesidad_prioritaria, cr.nivel_necesidad,
             fr.nivel_academico, fr.afinidad_titulo, fr.cursa_formacion, fr.interes_formacion,
