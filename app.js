@@ -380,17 +380,83 @@ function renderReview() {
   document.querySelector("#review-panel").innerHTML = items.map(([title, rows]) => `<section class="review-section"><h3>${esc(title)}</h3><div class="review-grid">${rows.map(([label, value]) => `<div class="review-item"><span>${esc(label)}</span><strong>${esc(value || "—")}</strong></div>`).join("")}</div></section>`).join("");
 }
 
+const DRAFT_KEY = "itsqmet-form-draft";
+const ATTEMPT_KEY = "itsqmet-form-last-attempt";
+
+class ApiError extends Error {
+  constructor(message, kind = "http", status = 0) {
+    super(message);
+    this.name = "ApiError";
+    this.kind = kind;
+    this.status = status;
+  }
+}
+
 async function api(path, options = {}) {
   const base = String(CONFIG.apiBaseUrl || "").replace(/\/$/, "");
-  if (!base) throw new Error("La conexión institucional todavía está en configuración.");
-  const response = await fetch(`${base}${path}`, {
-    ...options,
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) }
-  });
+  if (!base) throw new ApiError("La conexión institucional todavía está en configuración.", "config");
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 40000);
+  let response;
+  try {
+    response = await fetch(`${base}${path}`, {
+      ...options,
+      signal: controller.signal,
+      headers: { "Content-Type": "application/json", ...(options.headers || {}) }
+    });
+  } catch (error) {
+    if (error?.name === "AbortError") throw new ApiError("Tiempo de espera agotado.", "timeout");
+    throw new ApiError("No se pudo establecer comunicación con el servidor.", "network");
+  } finally {
+    window.clearTimeout(timeout);
+  }
   let payload = {};
-  try { payload = await response.json(); } catch { /* sin cuerpo JSON */ }
-  if (!response.ok) throw new Error(payload.message || `Error ${response.status}`);
+  try { payload = await response.json(); } catch { /* respuesta sin JSON */ }
+  if (!response.ok) {
+    const kind = response.status === 409 ? "duplicate" : response.status === 429 ? "rate_limit" : "http";
+    throw new ApiError(payload.message || `El servidor respondió con error ${response.status}.`, kind, response.status);
+  }
   return payload;
+}
+
+function saveDraft() {
+  try {
+    const draft = {};
+    new FormData(form).forEach((value, key) => {
+      if (key === "website") return;
+      if (Object.prototype.hasOwnProperty.call(draft, key)) draft[key] = [].concat(draft[key], value);
+      else draft[key] = value;
+    });
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    return true;
+  } catch (error) {
+    console.warn("[ITSQMET] No se pudo conservar el borrador en este navegador.", error?.name);
+    return false;
+  }
+}
+
+function rememberAttempt() {
+  try { localStorage.setItem(ATTEMPT_KEY, JSON.stringify({ at: Date.now() })); }
+  catch { /* almacenamiento deshabilitado */ }
+}
+
+function submissionErrorMessage(error, draftSaved) {
+  const saved = draftSaved
+    ? "Tus respuestas continúan guardadas en este dispositivo."
+    : "Mantén esta página abierta: el navegador no permitió guardar un respaldo.";
+  if (error.kind === "duplicate") {
+    return "Ya existe una encuesta registrada para esta cédula en el período actual. Si viste un error de conexión después de enviarla, es posible que sí se haya guardado. Solicita al administrador que confirme tu registro; no llenes otra encuesta.";
+  }
+  if (error.kind === "timeout") {
+    return `El servidor tardó demasiado en responder y no podemos confirmar si la encuesta se guardó. ${saved} Comprueba tu conexión antes de volver a intentar. Si aparece «ya existe una respuesta», consulta al administrador.`;
+  }
+  if (error.kind === "network") {
+    return navigator.onLine === false
+      ? `Tu dispositivo parece no tener conexión a internet. No pudimos confirmar el envío. ${saved} Conéctate de nuevo e inténtalo.`
+      : `No pudimos confirmar el envío por un problema de conexión con el servidor. ${saved} Espera un momento y vuelve a intentarlo. Si se indica que ya existe una respuesta, solicita su verificación al administrador.`;
+  }
+  if (error.kind === "rate_limit") return `Hay demasiados intentos de envío. Espera un minuto antes de volver a intentarlo. ${saved}`;
+  return `${error.message || "No fue posible registrar la encuesta."} ${saved}`;
 }
 
 async function submitTeacher(event) {
@@ -398,19 +464,33 @@ async function submitTeacher(event) {
   if (!validateStep(5)) return;
   const button = document.querySelector("#submit-btn");
   const status = document.querySelector("#submit-status");
-  button.disabled = true; button.textContent = "Enviando...";
+  const draftSaved = saveDraft();
+  rememberAttempt();
+  button.disabled = true;
+  button.textContent = "Enviando...";
   status.className = "status-box hidden";
   try {
     const result = await api("/api/submissions", { method: "POST", body: JSON.stringify(serializeForm()) });
-    status.textContent = result.message || "Formulario registrado correctamente.";
+    if (result.ok !== true || !result.id) {
+      throw new ApiError("El servidor no envió una confirmación válida. Verifica con el administrador antes de volver a completar la encuesta.", "confirmation");
+    }
+    status.textContent = "Tu encuesta se registró correctamente. Ya puedes cerrar esta página.";
     status.className = "status-box success";
-    button.textContent = "Enviado";
+    button.textContent = "Enviado correctamente";
     showToast("Respuesta registrada correctamente.");
-    localStorage.removeItem("itsqmet-form-draft");
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+      localStorage.removeItem(ATTEMPT_KEY);
+    } catch { /* sin permisos para almacenamiento */ }
   } catch (error) {
-    status.textContent = error.message;
-    status.className = "status-box error";
-    button.disabled = false; button.textContent = "Enviar formulario";
+    console.warn("[ITSQMET] Incidencia al enviar encuesta.", {
+      tipo: error.kind || "unknown",
+      codigoHttp: error.status || null
+    });
+    status.textContent = submissionErrorMessage(error, draftSaved);
+    status.className = error.kind === "duplicate" ? "status-box warning" : "status-box error";
+    button.disabled = error.kind === "duplicate";
+    button.textContent = error.kind === "duplicate" ? "Respuesta existente" : "Volver a intentar";
   }
 }
 
@@ -440,18 +520,15 @@ function bindNavigation() {
 function bindDraft() {
   let timer;
   form.addEventListener("input", () => {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      const draft = {};
-      new FormData(form).forEach((value, key) => { if (key !== "website") { if (draft[key]) draft[key] = [].concat(draft[key], value); else draft[key] = value; } });
-      localStorage.setItem("itsqmet-form-draft", JSON.stringify(draft));
-    }, 500);
+    window.clearTimeout(timer);
+    timer = window.setTimeout(saveDraft, 500);
   });
+  form.addEventListener("change", saveDraft);
 }
 
 function restoreDraft() {
   let draft;
-  try { draft = JSON.parse(localStorage.getItem("itsqmet-form-draft") || "null"); } catch { return; }
+  try { draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch { return; }
   if (!draft || typeof draft !== "object") return;
   Object.entries(draft).forEach(([name, raw]) => {
     const values = Array.isArray(raw) ? raw.map(String) : [String(raw)];
@@ -470,6 +547,14 @@ function restoreDraft() {
   document.querySelector("#current-study").classList.toggle("hidden", getRadio("cursaFormacion") !== "Sí");
   const interest = getRadio("interesFormacion");
   document.querySelector("#future-study").classList.toggle("hidden", !interest || interest === "No por el momento");
+  try {
+    const attempt = JSON.parse(localStorage.getItem(ATTEMPT_KEY) || "null");
+    if (attempt?.at && Date.now() - attempt.at < 7 * 24 * 60 * 60 * 1000) {
+      const status = document.querySelector("#submit-status");
+      status.textContent = "Hay un envío anterior sin confirmación en este dispositivo. Tus respuestas se recuperaron. Consulta con el administrador si la encuesta ya aparece registrada antes de intentarlo otra vez.";
+      status.className = "status-box warning";
+    }
+  } catch { /* sin historial disponible */ }
 }
 
 function init() {

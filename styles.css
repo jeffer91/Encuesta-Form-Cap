@@ -154,6 +154,7 @@ h1 { margin-bottom: 3px; color: var(--navy); font-family: inherit; font-size: cl
 .status-box { margin-top: 16px; padding: 12px 14px; border-radius: 9px; font-size: .8rem; }
 .status-box.success { background: #eaf7f0; color: #0f6840; border: 1px solid #b9e3cc; }
 .status-box.error { background: #fff1f0; color: #9f2b22; border: 1px solid #f2c5c1; }
+.status-box.warning { background: #fff8e8; color: #785100; border: 1px solid #efd496; }
 
 .admin-heading { align-items: center; }
 .admin-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
