@@ -126,7 +126,13 @@ async function createSubmission(request: Request) {
   if (text(form.cursaFormacion) === "Sí" && !requireFields(form, ["nivelCursa","etapaFormacion","programaActual","institucionActual"])) return json(request, { message: "Complete la información de la formación que cursa actualmente." }, 400);
   if (text(form.interesFormacion) !== "No por el momento" && !requireFields(form, ["nivelDeseado","tipoFormacion","areaFormacion","relacionFormacion","inicioPrevisto","modalidadFormacion","barreraFormacion","apoyoFormacion"])) return json(request, { message: "Complete la información de formación futura." }, 400);
 
-  const client = await pool.connect();
+  let client: pg.PoolClient;
+  try {
+    client = await pool.connect();
+  } catch (error: any) {
+    console.error("submission_connection_error", error?.code || error?.message);
+    return json(request, { message: "El servidor de encuestas está temporalmente inaccesible. Conserva tus respuestas e inténtalo nuevamente." }, 503);
+  }
   try {
     await client.query("BEGIN");
     const period = await client.query("SELECT id FROM periodos WHERE codigo=$1 AND activo=true", [periodCode]);
@@ -173,11 +179,15 @@ async function createSubmission(request: Request) {
     await client.query("COMMIT");
     return json(request, { ok: true, id: surveyId, message: "Formulario registrado correctamente." }, 201);
   } catch (error: any) {
-    await client.query("ROLLBACK");
-    // El envío puede haberse guardado aunque el navegador perdiera la respuesta.
+    try {
+      await client.query("ROLLBACK");
+    } catch (rollbackError: any) {
+      console.error("submission_rollback_error", rollbackError?.code || rollbackError?.message);
+    }
+    // Usar la misma conexión evita bloquear el pool cuando varios docentes reintentan.
     if (receiptToken) {
       try {
-        const previous = await pool.query("SELECT id FROM encuestas WHERE receipt_token=$1 LIMIT 1", [receiptToken]);
+        const previous = await client.query("SELECT id FROM encuestas WHERE receipt_token=$1 LIMIT 1", [receiptToken]);
         if (previous.rowCount) return json(request, { ok: true, id: previous.rows[0].id, alreadyRegistered: true, message: "Formulario registrado correctamente." }, 200);
       } catch (lookupError: any) {
         console.error("receipt_lookup_error", lookupError?.code || lookupError?.message);

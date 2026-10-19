@@ -432,13 +432,20 @@ async function api(path, options = {}) {
   const base = String(CONFIG.apiBaseUrl || "").replace(/\/$/, "");
   if (!base) throw new ApiError("La conexión institucional todavía está en configuración.", "config");
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), options.timeoutMs || 40000);
+  const { timeoutMs = 40000, ...requestOptions } = options;
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+  const headers = { Accept: "application/json", ...(requestOptions.headers || {}) };
+  // Neon interpreta JSON con request.json(), aunque el tipo sea text/plain.
+  // Esta cabecera evita la solicitud OPTIONS extra de los navegadores móviles.
+  if (requestOptions.body != null && !Object.keys(headers).some(key => key.toLowerCase() === "content-type")) {
+    headers["Content-Type"] = "text/plain;charset=UTF-8";
+  }
   let response;
   try {
     response = await fetch(`${base}${path}`, {
-      ...options,
+      ...requestOptions,
       signal: controller.signal,
-      headers: { "Content-Type": "application/json", ...(options.headers || {}) }
+      headers
     });
   } catch (error) {
     if (error?.name === "AbortError") throw new ApiError("Tiempo de espera agotado.", "timeout");
