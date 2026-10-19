@@ -382,6 +382,8 @@ function renderReview() {
 
 const DRAFT_KEY = "itsqmet-form-draft";
 const ATTEMPT_KEY = "itsqmet-form-last-attempt";
+let submissionConfirmed = false;
+let draftSaveTimer = null;
 
 class ApiError extends Error {
   constructor(message, kind = "http", status = 0) {
@@ -420,6 +422,7 @@ async function api(path, options = {}) {
 }
 
 function saveDraft() {
+  if (submissionConfirmed) return true;
   try {
     const draft = {};
     new FormData(form).forEach((value, key) => {
@@ -474,6 +477,9 @@ async function submitTeacher(event) {
     if (result.ok !== true || !result.id) {
       throw new ApiError("El servidor no envió una confirmación válida. Verifica con el administrador antes de volver a completar la encuesta.", "confirmation");
     }
+    submissionConfirmed = true;
+    window.clearTimeout(draftSaveTimer);
+    draftSaveTimer = null;
     status.textContent = "Tu encuesta se registró correctamente. Ya puedes cerrar esta página.";
     status.className = "status-box success";
     button.textContent = "Enviado correctamente";
@@ -518,12 +524,17 @@ function bindNavigation() {
 }
 
 function bindDraft() {
-  let timer;
   form.addEventListener("input", () => {
-    window.clearTimeout(timer);
-    timer = window.setTimeout(saveDraft, 500);
+    if (submissionConfirmed) return;
+    window.clearTimeout(draftSaveTimer);
+    draftSaveTimer = window.setTimeout(() => {
+      draftSaveTimer = null;
+      saveDraft();
+    }, 500);
   });
-  form.addEventListener("change", saveDraft);
+  form.addEventListener("change", () => {
+    if (!submissionConfirmed) saveDraft();
+  });
 }
 
 function restoreDraft() {
