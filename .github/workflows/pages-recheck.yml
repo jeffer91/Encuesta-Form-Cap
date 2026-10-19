@@ -1,0 +1,34 @@
+name: Check published survey version
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/pages-recheck.yml'
+permissions:
+  contents: write
+jobs:
+  check-pages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confirm GitHub Pages serves newest frontend
+        run: |
+          set -euo pipefail
+          url='https://jeffer91.github.io/Encuesta-Form-Cap'
+          ok=0
+          for n in $(seq 1 24); do
+            page="$(curl -fsSL --max-time 15 "$url/?v=20261019-recheck" || true)"
+            app="$(curl -fsSL --max-time 15 "$url/app.js?v=20261019-05" || true)"
+            if echo "$page" | grep -Fq 'app.js?v=20261019-05' && echo "$app" | grep -Fq 'text/plain;charset=UTF-8'; then ok=1; break; fi
+            sleep 10
+          done
+          test "$ok" = 1
+          printf '{"pages_latest_html":true,"pages_latest_js":true}\n' > .neon-build/pages-retest.json
+      - name: Record checks
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f .neon-build/pages-retest.json
+          git commit -m "Verify published mobile form revision"
+          git push origin HEAD:main
