@@ -19,6 +19,7 @@ const CAREER_CODES = new Set([
 ]);
 
 const rateBuckets = new Map<string, { start: number; count: number }>();
+const RECEIPT_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function cors(request: Request) {
   const origin = request.headers.get("origin") || "";
@@ -69,7 +70,9 @@ function constantTimeEqual(a: string, b: string) {
 
 function rateLimited(request: Request) {
   const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const key = forwarded || request.headers.get("cf-connecting-ip") || "unknown";
+  const key = forwarded || request.headers.get("cf-connecting-ip");
+  // No bloquear a todos los docentes juntos si el proxy no entrega la IP.
+  if (!key) return false;
   const now = Date.now();
   const bucket = rateBuckets.get(key);
   if (!bucket || now - bucket.start > 60_000) {
@@ -77,7 +80,7 @@ function rateLimited(request: Request) {
     return false;
   }
   bucket.count += 1;
-  return bucket.count > 10;
+  return bucket.count > 45;
 }
 
 function requireFields(obj: Record<string, unknown>, names: string[]) {
@@ -101,6 +104,8 @@ async function createSubmission(request: Request) {
   const cap = body.capacitacion || {};
   const form = body.formacion || {};
   const periodCode = text(body.periodCode, 40);
+  const receiptToken = text(body.receiptToken, 64);
+  if (receiptToken && !RECEIPT_PATTERN.test(receiptToken)) return json(request, { message: "Identificador de envío inválido." }, 400);
 
   if (!requireFields(docente, ["cedula","nombres","apellidos","correoInstitucional","correoPersonal","celular"]) ||
       !requireFields(perfil, ["carreraPrincipal","programa","dedicacion","sede","modalidad","asignaturaCompleja","causaAsignatura","refuerzoAsignatura"]) ||
@@ -138,9 +143,9 @@ async function createSubmission(request: Request) {
       [text(docente.cedula), text(docente.nombres, 120), text(docente.apellidos, 120), text(docente.correoInstitucional, 254).toLowerCase(), text(docente.correoPersonal, 254).toLowerCase(), text(docente.celular, 15)]
     );
     const survey = await client.query(
-      `INSERT INTO encuestas (docente_id,periodo_id,carrera_principal_codigo,programa,dedicacion,sede,modalidad,asignatura_compleja,causa_asignatura,refuerzo_asignatura)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
-      [teacher.rows[0].id, period.rows[0].id, text(perfil.carreraPrincipal), text(perfil.programa), text(perfil.dedicacion), text(perfil.sede), text(perfil.modalidad), text(perfil.asignaturaCompleja, 250), text(perfil.causaAsignatura), text(perfil.refuerzoAsignatura)]
+      `INSERT INTO encuestas (docente_id,periodo_id,carrera_principal_codigo,programa,dedicacion,sede,modalidad,asignatura_compleja,causa_asignatura,refuerzo_asignatura,receipt_token)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id`,
+      [teacher.rows[0].id, period.rows[0].id, text(perfil.carreraPrincipal), text(perfil.programa), text(perfil.dedicacion), text(perfil.sede), text(perfil.modalidad), text(perfil.asignaturaCompleja, 250), text(perfil.causaAsignatura), text(perfil.refuerzoAsignatura), receiptToken || null]
     );
     const surveyId = survey.rows[0].id;
 
@@ -169,10 +174,33 @@ async function createSubmission(request: Request) {
     return json(request, { ok: true, id: surveyId, message: "Formulario registrado correctamente." }, 201);
   } catch (error: any) {
     await client.query("ROLLBACK");
+    // El envío puede haberse guardado aunque el navegador perdiera la respuesta.
+    if (receiptToken) {
+      try {
+        const previous = await pool.query("SELECT id FROM encuestas WHERE receipt_token=$1 LIMIT 1", [receiptToken]);
+        if (previous.rowCount) return json(request, { ok: true, id: previous.rows[0].id, alreadyRegistered: true, message: "Formulario registrado correctamente." }, 200);
+      } catch (lookupError: any) {
+        console.error("receipt_lookup_error", lookupError?.code || lookupError?.message);
+      }
+    }
     if (error?.code === "23505" && String(error?.constraint || "").includes("docente_id")) return json(request, { message: "Ya existe una respuesta de esta cédula para el período actual." }, 409);
     console.error("submission_error", error?.code || error?.message);
     return json(request, { message: error?.status ? error.message : "No fue posible registrar el formulario. Intente nuevamente." }, error?.status || 500);
   } finally { client.release(); }
+}
+
+async function submissionStatus(request: Request) {
+  const origin = request.headers.get("origin") || "";
+  if (origin && !ALLOWED_ORIGINS.has(origin)) return json(request, { message: "Origen no autorizado." }, 403);
+  const token = text(new URL(request.url).searchParams.get("token"), 64);
+  if (!RECEIPT_PATTERN.test(token)) return json(request, { message: "Identificador inválido." }, 400);
+  try {
+    const result = await pool.query("SELECT id FROM encuestas WHERE receipt_token=$1 LIMIT 1", [token]);
+    return json(request, { ok: true, confirmed: !!result.rowCount, id: result.rows[0]?.id || null });
+  } catch (error: any) {
+    console.error("receipt_status_error", error?.code || error?.message);
+    return json(request, { message: "No se pudo verificar el envío." }, 503);
+  }
 }
 
 async function adminResponses(request: Request) {
@@ -216,6 +244,7 @@ export default {
     if (request.method === "GET" && (pathname === "/" || pathname === "/api/health")) return json(request, { ok: true, service: "ITSQMET Docentes API" });
     if (request.method === "GET" && pathname === "/api/catalog") return catalog(request);
     if (request.method === "POST" && pathname === "/api/submissions") return createSubmission(request);
+    if (request.method === "GET" && pathname === "/api/submissions/status") return submissionStatus(request);
     if (request.method === "GET" && pathname === "/api/admin/responses") return adminResponses(request);
     return json(request, { message: "Ruta no encontrada." }, 404);
   }

@@ -54,6 +54,9 @@ CREATE TABLE IF NOT EXISTS encuestas (
 );
 
 ALTER TABLE encuestas ADD COLUMN IF NOT EXISTS modalidad text NOT NULL DEFAULT '';
+-- Identificador aleatorio para comprobar confirmaciones después de fallos de red.
+ALTER TABLE encuestas ADD COLUMN IF NOT EXISTS receipt_token uuid;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_encuestas_receipt_token ON encuestas(receipt_token) WHERE receipt_token IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS docente_carreras (
   encuesta_id uuid NOT NULL REFERENCES encuestas(id) ON DELETE CASCADE,

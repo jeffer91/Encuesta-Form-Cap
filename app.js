@@ -317,6 +317,7 @@ function serializeForm() {
   const career = careerByCode(fd.get("carreraPrincipal"));
   return {
     periodCode: CONFIG.periodCode || "2026-2027",
+    receiptToken: getReceiptToken(fd.get("cedula"), CONFIG.periodCode || "2026-2027"),
     website: fd.get("website") || "",
     docente: {
       cedula: String(fd.get("cedula") || "").trim(),
@@ -382,6 +383,31 @@ function renderReview() {
 
 const DRAFT_KEY = "itsqmet-form-draft";
 const ATTEMPT_KEY = "itsqmet-form-last-attempt";
+const RECEIPT_KEY = "itsqmet-form-receipt-v1";
+let cachedReceipt = null;
+function getReceiptToken(cedula, periodCode) {
+  const owner = `${String(cedula || "").trim()}:${String(periodCode || "").trim()}`;
+  if (cachedReceipt?.owner === owner) return cachedReceipt.token;
+  try {
+    const previous = JSON.parse(localStorage.getItem(RECEIPT_KEY) || "null");
+    if (previous?.owner === owner && /^[0-9a-f-]{36}$/i.test(previous.token)) {
+      cachedReceipt = previous;
+      return previous.token;
+    }
+  } catch { /* almacenamiento no disponible */ }
+  cachedReceipt = { owner, token: crypto.randomUUID() };
+  try { localStorage.setItem(RECEIPT_KEY, JSON.stringify(cachedReceipt)); }
+  catch { /* se mantiene durante esta sesión */ }
+  return cachedReceipt.token;
+}
+function clearReceipt() {
+  cachedReceipt = null;
+  try { localStorage.removeItem(RECEIPT_KEY); } catch { /* sin permisos */ }
+}
+function previousAttemptExists() {
+  try { return !!JSON.parse(localStorage.getItem(ATTEMPT_KEY) || "null")?.at; }
+  catch { return false; }
+}
 let submissionConfirmed = false;
 let draftSaveTimer = null;
 
@@ -398,7 +424,7 @@ async function api(path, options = {}) {
   const base = String(CONFIG.apiBaseUrl || "").replace(/\/$/, "");
   if (!base) throw new ApiError("La conexión institucional todavía está en configuración.", "config");
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 40000);
+  const timeout = window.setTimeout(() => controller.abort(), options.timeoutMs || 40000);
   let response;
   try {
     response = await fetch(`${base}${path}`, {
@@ -456,10 +482,36 @@ function submissionErrorMessage(error, draftSaved) {
   if (error.kind === "network") {
     return navigator.onLine === false
       ? `Tu dispositivo parece no tener conexión a internet. No pudimos confirmar el envío. ${saved} Conéctate de nuevo e inténtalo.`
-      : `No pudimos confirmar el envío por un problema de conexión con el servidor. ${saved} Espera un momento y vuelve a intentarlo. Si se indica que ya existe una respuesta, solicita su verificación al administrador.`;
+      : `No pudimos confirmar el envío por un problema de conexión con el servidor. ${saved} Si abriste el formulario dentro de WhatsApp, ábrelo en Chrome o Safari, o cambia entre Wi-Fi y datos móviles. Después vuelve a intentar. Si ya existe una respuesta, solicita su verificación al administrador.`;
   }
   if (error.kind === "rate_limit") return `Hay demasiados intentos de envío. Espera un minuto antes de volver a intentarlo. ${saved}`;
   return `${error.message || "No fue posible registrar la encuesta."} ${saved}`;
+}
+
+async function verifySavedReceipt(token) {
+  if (navigator.onLine === false) return null;
+  try {
+    const result = await api(`/api/submissions/status?token=${encodeURIComponent(token)}`, { timeoutMs: 12000 });
+    return result?.ok === true && result.confirmed === true && result.id ? result : null;
+  } catch {
+    // Si el servidor sigue usando una versión anterior, conservar el borrador.
+    return null;
+  }
+}
+function markConfirmed(status, button) {
+  submissionConfirmed = true;
+  window.clearTimeout(draftSaveTimer);
+  draftSaveTimer = null;
+  status.textContent = "Tu encuesta se registró correctamente. Ya puedes cerrar esta página.";
+  status.className = "status-box success";
+  button.disabled = true;
+  button.textContent = "Enviado correctamente";
+  showToast("Respuesta registrada correctamente.");
+  clearReceipt();
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+    localStorage.removeItem(ATTEMPT_KEY);
+  } catch { /* sin permisos para almacenamiento */ }
 }
 
 async function submitTeacher(event) {
@@ -467,28 +519,29 @@ async function submitTeacher(event) {
   if (!validateStep(5)) return;
   const button = document.querySelector("#submit-btn");
   const status = document.querySelector("#submit-status");
+  const payload = serializeForm();
+  const hadPreviousAttempt = previousAttemptExists();
   const draftSaved = saveDraft();
   rememberAttempt();
   button.disabled = true;
   button.textContent = "Enviando...";
   status.className = "status-box hidden";
   try {
-    const result = await api("/api/submissions", { method: "POST", body: JSON.stringify(serializeForm()) });
+    if (hadPreviousAttempt) {
+      button.textContent = "Verificando envío...";
+      const saved = await verifySavedReceipt(payload.receiptToken);
+      if (saved) { markConfirmed(status, button); return; }
+      button.textContent = "Enviando...";
+    }
+    const result = await api("/api/submissions", { method: "POST", body: JSON.stringify(payload) });
     if (result.ok !== true || !result.id) {
       throw new ApiError("El servidor no envió una confirmación válida. Verifica con el administrador antes de volver a completar la encuesta.", "confirmation");
     }
-    submissionConfirmed = true;
-    window.clearTimeout(draftSaveTimer);
-    draftSaveTimer = null;
-    status.textContent = "Tu encuesta se registró correctamente. Ya puedes cerrar esta página.";
-    status.className = "status-box success";
-    button.textContent = "Enviado correctamente";
-    showToast("Respuesta registrada correctamente.");
-    try {
-      localStorage.removeItem(DRAFT_KEY);
-      localStorage.removeItem(ATTEMPT_KEY);
-    } catch { /* sin permisos para almacenamiento */ }
+    markConfirmed(status, button);
   } catch (error) {
+    // Una respuesta perdida no significa que no exista registro en PostgreSQL.
+    const saved = await verifySavedReceipt(payload.receiptToken);
+    if (saved) { markConfirmed(status, button); return; }
     console.warn("[ITSQMET] Incidencia al enviar encuesta.", {
       tipo: error.kind || "unknown",
       codigoHttp: error.status || null
